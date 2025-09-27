@@ -1,0 +1,113 @@
+.loginParentDiv {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100%;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.loginContainer {
+    background: #f9f7fc;
+    padding: 40px 35px;
+    border-radius: 16px;
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: fadeIn 0.8s ease-in-out;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.loginHeading h3 {
+    font-size: 1.6rem;
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 25px;
+}
+
+.loginError {
+    margin-bottom: 15px;
+    border-radius: 8px;
+    background-color: #ffe5e7;
+    color: #d32f2f;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    width: 100%;
+}
+
+.loginButton {
+    background: linear-gradient(90deg, #764ba2, #ff6cab);
+    color: #fff;
+    border: none;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    padding: 12px;
+    width: 100%;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+.loginButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0px 4px 12px rgba(118, 75, 162, 0.4);
+}
+
+.loginContinueButton {
+    border: 1px solid #ccc;
+    margin-bottom: 15px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #fff;
+    font-weight: 500;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.loginContinueButton:hover {
+    background-color: #f0eafc;
+}
+
+.googleLogoContainer {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+.googleLogo {
+    width: 100%;
+    height: 100%;
+}
+
+.signupLink {
+    text-decoration: none;
+    color: #764ba2;
+    font-weight: 600;
+    margin-left: 5px;
+}
+.signupLink:hover {
+    color: #ff6cab;
+    text-decoration: underline;
+}
+
+.emailError,
+.passwordError {
+    color: #d32f2f;
+    font-size: 0.85rem;
+    margin-top: -10px;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
