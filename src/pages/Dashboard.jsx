@@ -303,7 +303,7 @@ const Dashboard = () => {
               label="Quantity"
               type="number"
               value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+              onChange={(e) => setQuantity(parseInt(e.target.value))}
               inputProps={{ min: 1 }}
               fullWidth
               size="large"

@@ -260,14 +260,14 @@ const Purchase = () => {
 
           <Grid item xs={6} sm={6} md={2}>
             <TextField
-              label="Pack Quantity"
+              label="Number of packs to add"
               type="number"
               value={packQuantity}
-              onChange={(e) => setPackQuantity(parseInt(e.target.value) || 1)}
+              onChange={(e) => setPackQuantity(parseInt(e.target.value))}
               inputProps={{ min: 1 }}
               fullWidth
               size="large"
-              helperText="Number of packs to add"
+              // helperText="Number of packs to add"
             />
           </Grid>
 

@@ -1,0 +1,21 @@
+.sidebarLink {
+  display: block;
+  padding: 10px 15px;
+  margin: 6px 0;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.sidebarLink:hover {
+  background-color: #e9f2ff;
+  color: #0d6efd; /* bootstrap blue shade */
+}
+
+.sidebarLink.active {
+  background-color: #0d6efd;
+  color: white;
+  font-weight: 600;
+}
