@@ -290,7 +290,7 @@ const Dashboard = () => {
                   <Box>
                     <Typography variant="body1" fontWeight="medium">{option.name}</Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Stock: {option.qty} | Price: ${option.salesPrice}
+                      Stock: {option.qty} Units | Price: Rs. {option.salesPrice}
                     </Typography>
                   </Box>
                 </Box>
@@ -328,7 +328,7 @@ const Dashboard = () => {
         {selectedMedicine && (
           <Box mt={2}>
             <Chip
-              label={`${selectedMedicine.name} - Stock: ${selectedMedicine.qty} - Price: $${selectedMedicine.salesPrice}`}
+              label={`${selectedMedicine.name} - Stock: ${selectedMedicine.qty} Units - Price: Rs. ${selectedMedicine.salesPrice}`}
               onDelete={() => setSelectedMedicine(null)}
               color="primary"
             />
@@ -376,7 +376,7 @@ const Dashboard = () => {
                 {currentInvoice.invoiceMedicines?.map((item) => (
                   <TableRow key={item.medicineId}>
                     <TableCell>{item.medicine?.name}</TableCell>
-                    <TableCell>${item.salesPrice}</TableCell>
+                    <TableCell>{item.salesPrice}</TableCell>
                     <TableCell>
                       <Box display="flex" alignItems="center">
                         <IconButton
@@ -394,7 +394,7 @@ const Dashboard = () => {
                         </IconButton>
                       </Box>
                     </TableCell>
-                    <TableCell>${(item.salesPrice * item.qty).toFixed(2)}</TableCell>
+                    <TableCell>{(item.salesPrice * item.qty).toFixed(2)}</TableCell>
                     <TableCell>
                       <IconButton
                         color="error"
@@ -420,16 +420,16 @@ const Dashboard = () => {
                   </Typography>
                   <Box display="flex" justifyContent="space-between">
                     <Typography>Gross Total:</Typography>
-                    <Typography>${grossTotal.toFixed(2)}</Typography>
+                    <Typography>{grossTotal?.toFixed(2)}</Typography>
                   </Box>
                   <Box display="flex" justifyContent="space-between">
                     <Typography>Discount ({discountPercentage}%):</Typography>
-                    <Typography>-${discount.toFixed(2)}</Typography>
+                    <Typography>-{discount?.toFixed(2)}</Typography>
                   </Box>
                   <Divider sx={{ my: 1 }} />
                   <Box display="flex" justifyContent="space-between">
                     <Typography variant="h6">Net Total:</Typography>
-                    <Typography variant="h6">${netTotal.toFixed(2)}</Typography>
+                    <Typography variant="h6">{netTotal?.toFixed(2)}</Typography>
                   </Box>
                 </CardContent>
               </Card>
@@ -447,7 +447,7 @@ const Dashboard = () => {
               label="Discount Percentage"
               type="number"
               value={discountPercentage}
-              onChange={(e) => setDiscountPercentage(parseFloat(e.target.value) || 0)}
+              onChange={(e) => setDiscountPercentage(parseFloat(e.target.value))}
               InputProps={{
                 endAdornment: <InputAdornment position="end"><Percent /></InputAdornment>
               }}
@@ -458,18 +458,18 @@ const Dashboard = () => {
               label="Cash Paid"
               type="number"
               value={cashPaid}
-              onChange={(e) => setCashPaid(parseFloat(e.target.value) || 0)}
+              onChange={(e) => setCashPaid(parseFloat(e.target.value))}
               InputProps={{
-                startAdornment: <InputAdornment position="start"><AttachMoney /></InputAdornment>
+                startAdornment: <InputAdornment position="start">Rs. </InputAdornment>
               }}
               fullWidth
             />
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Net Total: ${netTotal.toFixed(2)}
+              Net Total: Rs. {netTotal.toFixed(2)}
             </Typography>
             {cashPaid > 0 && (
               <Typography variant="body2" color={cashPaid >= netTotal ? "success.main" : "error.main"}>
-                Change: ${(cashPaid - netTotal).toFixed(2)}
+                Change: Rs. {(cashPaid - netTotal).toFixed(2)}
               </Typography>
             )}
           </Box>

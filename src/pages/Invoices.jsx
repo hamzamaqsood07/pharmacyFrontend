@@ -21,13 +21,7 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Divider,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  List,
-  ListItem,
-  ListItemText
+  Divider
 } from '@mui/material';
 import {
   Search,
@@ -163,9 +157,8 @@ const Invoices = () => {
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">
-                <AttachMoney color="primary" sx={{ mr: 2 }} />
                 <Box>
-                  <Typography variant="h6">${totalRevenue.toFixed(2)}</Typography>
+                  <Typography variant="h6">Rs. {totalRevenue.toFixed(2)}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Total Revenue
                   </Typography>
@@ -238,17 +231,17 @@ const Invoices = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium">
-                      ${invoice.grossTotal?.toFixed(2) || '0.00'}
+                      {invoice.grossTotal?.toFixed(2) || '0.00'}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      ${invoice.discount?.toFixed(2) || '0.00'}
+                      {invoice.discount?.toFixed(2) || '0.00'}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium">
-                      ${invoice.netTotal?.toFixed(2) || '0.00'}
+                      {invoice.netTotal?.toFixed(2) || '0.00'}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -319,22 +312,22 @@ const Invoices = () => {
                     Financial Summary
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Gross Total:</strong> ${selectedInvoice.grossTotal?.toFixed(2) || '0.00'}
+                    <strong>Gross Total:</strong> Rs. {selectedInvoice.grossTotal?.toFixed(2) || '0.00'}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Discount:</strong> ${selectedInvoice.discount?.toFixed(2) || '0.00'}
+                    <strong>Discount:</strong> Rs. {selectedInvoice.discount?.toFixed(2) || '0.00'}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Net Total:</strong> ${selectedInvoice.netTotal?.toFixed(2) || '0.00'}
+                    <strong>Net Total:</strong> Rs. {selectedInvoice.netTotal?.toFixed(2) || '0.00'}
                   </Typography>
                   {selectedInvoice.cashPaid && (
                     <Typography variant="body2">
-                      <strong>Cash Paid:</strong> ${selectedInvoice.cashPaid.toFixed(2)}
+                      <strong>Cash Paid:</strong> Rs. {selectedInvoice.cashPaid.toFixed(2)}
                     </Typography>
                   )}
                   {selectedInvoice.balance && (
                     <Typography variant="body2">
-                      <strong>Balance:</strong> ${selectedInvoice.balance.toFixed(2)}
+                      <strong>Balance:</strong> Rs. {selectedInvoice.balance.toFixed(2)}
                     </Typography>
                   )}
                 </Grid>
@@ -367,7 +360,7 @@ const Invoices = () => {
                           </TableCell>
                           <TableCell>
                             <Typography variant="body2">
-                              ${item.salesPrice?.toFixed(2) || '0.00'}
+                              {item.salesPrice?.toFixed(2) || '0.00'}
                             </Typography>
                           </TableCell>
                           <TableCell>
@@ -377,7 +370,7 @@ const Invoices = () => {
                           </TableCell>
                           <TableCell>
                             <Typography variant="body2" fontWeight="medium">
-                              ${((item.salesPrice || 0) * (item.qty || 0)).toFixed(2)}
+                              {((item.salesPrice || 0) * (item.qty || 0)).toFixed(2)}
                             </Typography>
                           </TableCell>
                         </TableRow>

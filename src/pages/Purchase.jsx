@@ -99,7 +99,7 @@ const Purchase = () => {
   const confirmPurchase = async () => {
     try {
       setLoading(true);
-      await api.patch(`/medicine/increment/${selectedMedicine.id}`, {
+      await api.patch(`/medicine/incrementQty/${selectedMedicine.id}`, {
         packQty: packQuantity
       });
 
@@ -250,7 +250,7 @@ const Purchase = () => {
                   <Box>
                     <Typography variant="body1" fontWeight="medium">{option.name}</Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Current Stock: {option.qty} | Pack Size: {option.packSize}
+                      Current Stock: {option.qty} Units | Pack Size: {option.packSize} Units
                     </Typography>
                   </Box>
                 </Box>
@@ -346,13 +346,11 @@ const Purchase = () => {
                     </TableCell>
                     <TableCell>
                       <Box display="flex" alignItems="center">
-                        <AttachMoney fontSize="small" />
                         {medicine.purchasePrice}
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Box display="flex" alignItems="center">
-                        <AttachMoney fontSize="small" />
                         {medicine.salesPrice}
                       </Box>
                     </TableCell>
