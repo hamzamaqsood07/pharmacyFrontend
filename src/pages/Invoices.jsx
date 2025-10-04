@@ -1,0 +1,414 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Paper,
+  TextField,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Grid,
+  Card,
+  CardContent,
+  Chip,
+  InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Divider,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+  ListItemText
+} from '@mui/material';
+import {
+  Search,
+  Receipt,
+  AttachMoney,
+  ExpandMore,
+  Visibility,
+  Print,
+  Download
+} from '@mui/icons-material';
+import { toast } from 'react-toastify';
+import api from '../utils/axiosConfig';
+
+const Invoices = () => {
+  const [invoices, setInvoices] = useState([]);
+  const [filteredInvoices, setFilteredInvoices] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
+  useEffect(() => {
+    if (searchTerm.length > 0) {
+      const filtered = invoices.filter(invoice => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          invoice.id.toLowerCase().includes(searchLower) ||
+          invoice.user?.name?.toLowerCase().includes(searchLower) ||
+          invoice.status.toLowerCase().includes(searchLower)
+        );
+      });
+      setFilteredInvoices(filtered);
+    } else {
+      setFilteredInvoices(invoices);
+    }
+  }, [searchTerm, invoices]);
+
+  const fetchInvoices = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/invoice');
+      setInvoices(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch invoices');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewDetails = (invoice) => {
+    setSelectedInvoice(invoice);
+    setDetailDialogOpen(true);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'cancelled':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const calculateTotals = () => {
+    const totalInvoices = invoices.length;
+    const completedInvoices = invoices.filter(inv => inv.status === 'COMPLETED').length;
+    const totalRevenue = invoices
+      .filter(inv => inv.status === 'COMPLETED')
+      .reduce((sum, inv) => sum + (inv.netTotal || 0), 0);
+
+    return { totalInvoices, completedInvoices, totalRevenue };
+  };
+
+  const { totalInvoices, completedInvoices, totalRevenue } = calculateTotals();
+
+  return (
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        Invoice Management
+      </Typography>
+
+      {/* Summary Cards */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center">
+                <Receipt color="primary" sx={{ mr: 2 }} />
+                <Box>
+                  <Typography variant="h6">{totalInvoices}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Invoices
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center">
+                <Receipt color="success" sx={{ mr: 2 }} />
+                <Box>
+                  <Typography variant="h6">{completedInvoices}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Completed
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center">
+                <AttachMoney color="primary" sx={{ mr: 2 }} />
+                <Box>
+                  <Typography variant="h6">${totalRevenue.toFixed(2)}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Revenue
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Search and Filter Section */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          All Invoices
+        </Typography>
+
+        <TextField
+          label="Search Invoices"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Invoice ID</TableCell>
+                <TableCell>Date</TableCell>
+                <TableCell>Customer</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Gross Total</TableCell>
+                <TableCell>Discount</TableCell>
+                <TableCell>Net Total</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredInvoices.map((invoice) => (
+                <TableRow key={invoice.id}>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="medium">
+                      {invoice.id.substring(0, 8)}...
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {formatDate(invoice.createdAt)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {invoice.user?.name || 'N/A'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={invoice.status}
+                      color={getStatusColor(invoice.status)}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="medium">
+                      ${invoice.grossTotal?.toFixed(2) || '0.00'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      ${invoice.discount?.toFixed(2) || '0.00'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="medium">
+                      ${invoice.netTotal?.toFixed(2) || '0.00'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <IconButton
+                      onClick={() => handleViewDetails(invoice)}
+                      size="small"
+                    >
+                      <Visibility />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {filteredInvoices.length === 0 && !loading && (
+          <Box textAlign="center" py={4}>
+            <Typography variant="body1" color="text.secondary">
+              {searchTerm ? 'No invoices found matching your search' : 'No invoices available'}
+            </Typography>
+          </Box>
+        )}
+      </Paper>
+
+      {/* Invoice Detail Dialog */}
+      <Dialog 
+        open={detailDialogOpen} 
+        onClose={() => setDetailDialogOpen(false)} 
+        maxWidth="md" 
+        fullWidth
+      >
+        <DialogTitle>
+          Invoice Details
+          {selectedInvoice && (
+            <Typography variant="body2" color="text.secondary">
+              ID: {selectedInvoice.id}
+            </Typography>
+          )}
+        </DialogTitle>
+        <DialogContent>
+          {selectedInvoice && (
+            <Box>
+              {/* Invoice Header */}
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="h6" gutterBottom>
+                    Invoice Information
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Date:</strong> {formatDate(selectedInvoice.createdAt)}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Status:</strong> 
+                    <Chip 
+                      label={selectedInvoice.status} 
+                      color={getStatusColor(selectedInvoice.status)} 
+                      size="small" 
+                      sx={{ ml: 1 }}
+                    />
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Cashier:</strong> {selectedInvoice.user?.name || 'N/A'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="h6" gutterBottom>
+                    Financial Summary
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Gross Total:</strong> ${selectedInvoice.grossTotal?.toFixed(2) || '0.00'}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Discount:</strong> ${selectedInvoice.discount?.toFixed(2) || '0.00'}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Net Total:</strong> ${selectedInvoice.netTotal?.toFixed(2) || '0.00'}
+                  </Typography>
+                  {selectedInvoice.cashPaid && (
+                    <Typography variant="body2">
+                      <strong>Cash Paid:</strong> ${selectedInvoice.cashPaid.toFixed(2)}
+                    </Typography>
+                  )}
+                  {selectedInvoice.balance && (
+                    <Typography variant="body2">
+                      <strong>Balance:</strong> ${selectedInvoice.balance.toFixed(2)}
+                    </Typography>
+                  )}
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ my: 2 }} />
+
+              {/* Invoice Items */}
+              <Typography variant="h6" gutterBottom>
+                Invoice Items
+              </Typography>
+              {selectedInvoice.invoiceMedicines && selectedInvoice.invoiceMedicines.length > 0 ? (
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Medicine</TableCell>
+                        <TableCell>Price</TableCell>
+                        <TableCell>Quantity</TableCell>
+                        <TableCell>Total</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {selectedInvoice.invoiceMedicines.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight="medium">
+                              {item.medicine?.name || 'Unknown Medicine'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              ${item.salesPrice?.toFixed(2) || '0.00'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {item.qty}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight="medium">
+                              ${((item.salesPrice || 0) * (item.qty || 0)).toFixed(2)}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No items found in this invoice
+                </Typography>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDetailDialogOpen(false)}>Close</Button>
+          <Button
+            variant="contained"
+            startIcon={<Print />}
+            onClick={() => {
+              // Implement print functionality
+              window.print();
+            }}
+          >
+            Print
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default Invoices;

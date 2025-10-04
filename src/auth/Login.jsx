@@ -36,11 +36,29 @@ export default function Login() {
   const onSubmit = async (data) => {
     setError("");
     try {
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/login`, data);
-      console.log("logged in successfully!");
-      navigate("/");
+      console.log("Attempting login with:", data);
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/login`, data);
+      
+      console.log("Login response:", response);
+      console.log("Response status:", response.status);
+      console.log("Response data:", response.data);
+      console.log("Response headers:", response.headers);
+      
+      // Try to get token from response body first, then from headers
+      const token = response.data.token || response.headers.authorization?.replace('Bearer ', '');
+      
+      console.log("Extracted token:", token);
+      
+      if (token) {
+        localStorage.setItem('token', token);
+        console.log("Token stored in localStorage");
+        navigate("/");
+      } else {
+        setError("Login failed - no token received");
+      }
     } catch (err) {
-      setError(err?.response?.data?.message)
+      console.error("Login error:", err);
+      setError(err?.response?.data?.message || "Login failed");
     }
   };
 
