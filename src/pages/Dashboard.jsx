@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Paper,
@@ -22,8 +22,8 @@ import {
   Card,
   CardContent,
   Divider,
-  InputAdornment
-} from '@mui/material';
+  InputAdornment,
+} from "@mui/material";
 import {
   Add,
   Remove,
@@ -31,14 +31,14 @@ import {
   Search,
   Receipt,
   AttachMoney,
-  Percent
-} from '@mui/icons-material';
-import { toast } from 'react-toastify';
-import api from '../utils/axiosConfig';
+  Percent,
+} from "@mui/icons-material";
+import { toast } from "react-toastify";
+import api from "../utils/axiosConfig";
 
 const Dashboard = () => {
   const [medicines, setMedicines] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filteredMedicines, setFilteredMedicines] = useState([]);
   const [selectedMedicine, setSelectedMedicine] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -47,8 +47,9 @@ const Dashboard = () => {
   const [cashPaid, setCashPaid] = useState(0);
   const [finalizeDialogOpen, setFinalizeDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   const searchInputRef = useRef(null);
+  const quantityRef = useRef(null);
 
   useEffect(() => {
     fetchMedicines();
@@ -57,7 +58,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (searchTerm.length > 0) {
-      const filtered = medicines.filter(medicine =>
+      const filtered = medicines.filter((medicine) =>
         medicine.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredMedicines(filtered);
@@ -68,20 +69,20 @@ const Dashboard = () => {
 
   const fetchMedicines = async () => {
     try {
-      const response = await api.get('/medicine');
+      const response = await api.get("/medicine");
       setMedicines(response.data);
     } catch (error) {
-      toast.error('Failed to fetch medicines');
+      toast.error("Failed to fetch medicines");
     }
   };
 
   const fetchCurrentInvoice = async () => {
     try {
-      const response = await api.get('/invoice/currentInvoice');
+      const response = await api.get("/invoice/currentInvoice");
       setCurrentInvoice(response.data);
     } catch (error) {
       if (error.response?.status !== 404) {
-        toast.error('Failed to fetch current invoice');
+        toast.error("Failed to fetch current invoice");
       }
     }
   };
@@ -89,8 +90,12 @@ const Dashboard = () => {
   const handleMedicineSelect = (medicine) => {
     setSelectedMedicine(medicine);
     setQuantity(1);
-    setSearchTerm('');
+    setSearchTerm("");
     setFilteredMedicines([]);
+
+    setTimeout(() => {
+      quantityRef.current?.focus();
+    }, 100);
   };
 
   const handleAddToInvoice = async () => {
@@ -98,17 +103,24 @@ const Dashboard = () => {
 
     try {
       setLoading(true);
-      await api.post('/invoice/add-item', {
+      await api.post("/invoice/add-item", {
         medicineId: selectedMedicine.id,
-        qty: quantity
+        qty: quantity,
       });
-      
-      toast.success('Medicine added to invoice');
+
+      toast.success("Medicine added to invoice");
       setSelectedMedicine(null);
       setQuantity(1);
+      setSearchTerm("");
+      setFilteredMedicines([]);
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
       fetchCurrentInvoice();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to add medicine to invoice');
+      toast.error(
+        error.response?.data?.message || "Failed to add medicine to invoice"
+      );
     } finally {
       setLoading(false);
     }
@@ -117,10 +129,10 @@ const Dashboard = () => {
   const handleRemoveFromInvoice = async (medicineId) => {
     try {
       await api.delete(`/invoice/remove-item/${medicineId}`);
-      toast.success('Medicine removed from invoice');
+      toast.success("Medicine removed from invoice");
       fetchCurrentInvoice();
     } catch (error) {
-      toast.error('Failed to remove medicine from invoice');
+      toast.error("Failed to remove medicine from invoice");
     }
   };
 
@@ -131,36 +143,38 @@ const Dashboard = () => {
     }
 
     try {
-      await api.patch('/invoice/update-item', {
+      await api.patch("/invoice/update-item", {
         medicineId,
-        qty: newQuantity
+        qty: newQuantity,
       });
       fetchCurrentInvoice();
     } catch (error) {
-      toast.error('Failed to update quantity');
+      toast.error("Failed to update quantity");
     }
   };
 
   const handleFinalizeInvoice = async () => {
     if (cashPaid < currentInvoice.netTotal) {
-      toast.error('Cash paid must be at least equal to net total');
+      toast.error("Cash paid must be at least equal to net total");
       return;
     }
 
     try {
       setLoading(true);
-      await api.post('/invoice/finalize', {
+      await api.post("/invoice/finalize", {
         cashPaid,
-        discountedPercentage: discountPercentage
+        discountedPercentage: discountPercentage,
       });
-      
-      toast.success('Invoice finalized successfully');
+
+      toast.success("Invoice finalized successfully");
       setFinalizeDialogOpen(false);
       setCurrentInvoice(null);
       setDiscountPercentage(0);
       setCashPaid(0);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to finalize invoice');
+      toast.error(
+        error.response?.data?.message || "Failed to finalize invoice"
+      );
     } finally {
       setLoading(false);
     }
@@ -168,21 +182,21 @@ const Dashboard = () => {
 
   const handleDiscardInvoice = async () => {
     try {
-      await api.delete('/invoice/currentInvoice');
-      toast.success('Invoice discarded');
+      await api.delete("/invoice/currentInvoice");
+      toast.success("Invoice discarded");
       setCurrentInvoice(null);
     } catch (error) {
-      toast.error('Failed to discard invoice');
+      toast.error("Failed to discard invoice");
     }
   };
 
   const calculateTotals = () => {
     if (!currentInvoice) return { grossTotal: 0, discount: 0, netTotal: 0 };
-    
+
     const grossTotal = currentInvoice.grossTotal || 0;
     const discount = (grossTotal * discountPercentage) / 100;
     const netTotal = grossTotal - discount;
-    
+
     return { grossTotal, discount, netTotal };
   };
 
@@ -191,36 +205,42 @@ const Dashboard = () => {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyPress = (e) => {
-      // Add medicine to invoice with Enter key
-      if (e.key === 'Enter' && selectedMedicine && quantity > 0) {
-        handleAddToInvoice();
-      }
       // Focus search input with Ctrl+F
-      if (e.ctrlKey && e.key === 'f') {
+      if (e.ctrlKey && e.key === "f") {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
       // Open finalize dialog with Ctrl+Enter when invoice exists
-      if (e.ctrlKey && e.key === 'Enter' && currentInvoice) {
+      if (e.ctrlKey && e.key === "Enter" && currentInvoice) {
         setFinalizeDialogOpen(true);
       }
     };
 
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
   }, [selectedMedicine, quantity, currentInvoice]);
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={2}>
-        <Typography variant="h4">
-          Invoice Dashboard
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ 
-          display: { xs: 'none', sm: 'block' },
-          fontSize: '0.875rem'
-        }}>
-          Keyboard shortcuts: Ctrl+F (search), Enter (add), Ctrl+Enter (finalize)
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+        flexWrap="wrap"
+        gap={2}
+      >
+        <Typography variant="h4">Invoice Dashboard</Typography>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            display: { xs: "none", sm: "block" },
+            fontSize: "0.875rem",
+          }}
+        >
+          Keyboard shortcuts: Ctrl+F (search), Enter (add), Ctrl+Enter
+          (finalize)
         </Typography>
       </Box>
 
@@ -229,17 +249,17 @@ const Dashboard = () => {
         <Typography variant="h6" gutterBottom>
           Add Medicine to Invoice
         </Typography>
-        
+
         <Grid container spacing={2} alignItems="flex-end">
-          <Grid item xs={12} sm={12} md={10} sx={{ width: '100%' }}>
+          <Grid item xs={12} sm={12} md={10} sx={{ width: "100%" }}>
             <Autocomplete
-              sx={{ width: '100%' }}
+              sx={{ width: "100%" }}
               freeSolo
               options={filteredMedicines}
-              getOptionLabel={(option) => option.name || ''}
-              value={selectedMedicine}
+              getOptionLabel={(option) => option.name || ""}
+              value={selectedMedicine || ""}
               onChange={(event, newValue) => {
-                if (newValue && typeof newValue === 'object') {
+                if (newValue && typeof newValue === "object") {
                   handleMedicineSelect(newValue);
                 }
               }}
@@ -255,22 +275,22 @@ const Dashboard = () => {
                   fullWidth
                   size="large"
                   sx={{
-                    width: '100%',
-                    '& .MuiOutlinedInput-root': {
-                      fontSize: '1.1rem',
-                      minHeight: '56px',
-                      '& fieldset': {
-                        borderWidth: '2px',
+                    width: "100%",
+                    "& .MuiOutlinedInput-root": {
+                      fontSize: "1.1rem",
+                      minHeight: "56px",
+                      "& fieldset": {
+                        borderWidth: "2px",
                       },
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
+                      "&:hover fieldset": {
+                        borderColor: "primary.main",
                       },
-                      '&.Mui-focused fieldset': {
-                        borderWidth: '2px',
+                      "&.Mui-focused fieldset": {
+                        borderWidth: "2px",
                       },
                     },
-                    '& .MuiInputBase-input': {
-                      padding: '16px 14px',
+                    "& .MuiInputBase-input": {
+                      padding: "16px 14px",
                     },
                   }}
                   slotProps={{
@@ -278,26 +298,29 @@ const Dashboard = () => {
                       ...params.InputProps,
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Search sx={{ fontSize: '1.2rem' }} />
+                          <Search sx={{ fontSize: "1.2rem" }} />
                         </InputAdornment>
                       ),
-                    }
+                    },
                   }}
                 />
               )}
               renderOption={(props, option) => (
                 <Box component="li" {...props}>
                   <Box>
-                    <Typography variant="body1" fontWeight="medium">{option.name}</Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {option.name}
+                    </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Stock: {option.qty} Units | Price: Rs. {option.salesPrice}
+                      Stock: {option.qty} Units | Unit Price: Rs.{" "}
+                      {(option.salesPrice / option.packSize).toFixed(2)}
                     </Typography>
                   </Box>
                 </Box>
               )}
             />
           </Grid>
-          
+
           <Grid item xs={6} sm={6} md={2}>
             <TextField
               label="Quantity"
@@ -307,9 +330,15 @@ const Dashboard = () => {
               inputProps={{ min: 1 }}
               fullWidth
               size="large"
+              inputRef={quantityRef}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && selectedMedicine && quantity > 0) {
+                  handleAddToInvoice();
+                }
+              }}
             />
           </Grid>
-          
+
           <Grid item xs={6} sm={6} md={2}>
             <Button
               variant="contained"
@@ -318,7 +347,7 @@ const Dashboard = () => {
               disabled={!selectedMedicine || quantity <= 0 || loading}
               fullWidth
               size="large"
-              sx={{ height: '56px' }}
+              sx={{ height: "56px" }}
             >
               Add to Invoice
             </Button>
@@ -328,7 +357,11 @@ const Dashboard = () => {
         {selectedMedicine && (
           <Box mt={2}>
             <Chip
-              label={`${selectedMedicine.name} - Stock: ${selectedMedicine.qty} Units - Price: Rs. ${selectedMedicine.salesPrice}`}
+              label={`${selectedMedicine.name} - Stock: ${
+                selectedMedicine.qty
+              } Units - Unit Price: Rs. ${(
+                selectedMedicine.salesPrice / selectedMedicine.packSize
+              ).toFixed(2)}`}
               onDelete={() => setSelectedMedicine(null)}
               color="primary"
             />
@@ -339,7 +372,12 @@ const Dashboard = () => {
       {/* Current Invoice */}
       {currentInvoice && (
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={2}
+          >
             <Typography variant="h6">Current Invoice</Typography>
             <Box>
               <Button
@@ -376,25 +414,31 @@ const Dashboard = () => {
                 {currentInvoice.invoiceMedicines?.map((item) => (
                   <TableRow key={item.medicineId}>
                     <TableCell>{item.medicine?.name}</TableCell>
-                    <TableCell>{item.salesPrice}</TableCell>
+                    <TableCell> {item.salesPrice.toFixed(2)}</TableCell>
                     <TableCell>
                       <Box display="flex" alignItems="center">
                         <IconButton
                           size="small"
-                          onClick={() => handleUpdateQuantity(item.medicineId, item.qty - 1)}
+                          onClick={() =>
+                            handleUpdateQuantity(item.medicineId, item.qty - 1)
+                          }
                         >
                           <Remove />
                         </IconButton>
                         <Typography sx={{ mx: 1 }}>{item.qty}</Typography>
                         <IconButton
                           size="small"
-                          onClick={() => handleUpdateQuantity(item.medicineId, item.qty + 1)}
+                          onClick={() =>
+                            handleUpdateQuantity(item.medicineId, item.qty + 1)
+                          }
                         >
                           <Add />
                         </IconButton>
                       </Box>
                     </TableCell>
-                    <TableCell>{(item.salesPrice * item.qty).toFixed(2)}</TableCell>
+                    <TableCell>
+                      {(item.salesPrice * item.qty).toFixed(2)}
+                    </TableCell>
                     <TableCell>
                       <IconButton
                         color="error"
@@ -439,7 +483,12 @@ const Dashboard = () => {
       )}
 
       {/* Finalize Invoice Dialog */}
-      <Dialog open={finalizeDialogOpen} onClose={() => setFinalizeDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={finalizeDialogOpen}
+        onClose={() => setFinalizeDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Finalize Invoice</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
@@ -447,9 +496,15 @@ const Dashboard = () => {
               label="Discount Percentage"
               type="number"
               value={discountPercentage}
-              onChange={(e) => setDiscountPercentage(parseFloat(e.target.value))}
+              onChange={(e) =>
+                setDiscountPercentage(parseFloat(e.target.value))
+              }
               InputProps={{
-                endAdornment: <InputAdornment position="end"><Percent /></InputAdornment>
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Percent />
+                  </InputAdornment>
+                ),
               }}
               fullWidth
               sx={{ mb: 2 }}
@@ -460,7 +515,9 @@ const Dashboard = () => {
               value={cashPaid}
               onChange={(e) => setCashPaid(parseFloat(e.target.value))}
               InputProps={{
-                startAdornment: <InputAdornment position="start">Rs. </InputAdornment>
+                startAdornment: (
+                  <InputAdornment position="start">Rs. </InputAdornment>
+                ),
               }}
               fullWidth
             />
@@ -468,7 +525,10 @@ const Dashboard = () => {
               Net Total: Rs. {netTotal.toFixed(2)}
             </Typography>
             {cashPaid > 0 && (
-              <Typography variant="body2" color={cashPaid >= netTotal ? "success.main" : "error.main"}>
+              <Typography
+                variant="body2"
+                color={cashPaid >= netTotal ? "success.main" : "error.main"}
+              >
                 Change: Rs. {(cashPaid - netTotal).toFixed(2)}
               </Typography>
             )}
