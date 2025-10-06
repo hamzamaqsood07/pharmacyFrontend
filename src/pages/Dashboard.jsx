@@ -48,8 +48,23 @@ const Dashboard = () => {
   const [finalizeDialogOpen, setFinalizeDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const searchInputRef = useRef(null);
-  const quantityRef = useRef(null);
+  const searchInputRef = useRef(null);// Ref for the search input field
+  const quantityRef = useRef(null);// Ref for the quantity input field
+  const discountRef = useRef(null);// Ref for the discount in dialog box
+  const cashPaidRef = useRef(null);// Ref for the cash paid in dialog box
+
+  useEffect(() => {
+    if (finalizeDialogOpen) {
+    setTimeout(() => {
+      if (discountRef.current) {
+        discountRef.current.focus();
+        discountRef.current.select();
+      }
+      
+    }, 100);
+  }
+  }, [finalizeDialogOpen])
+  
 
   useEffect(() => {
     fetchMedicines();
@@ -499,6 +514,7 @@ const Dashboard = () => {
               onChange={(e) =>
                 setDiscountPercentage(parseFloat(e.target.value))
               }
+              inputRef={discountRef}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -514,6 +530,7 @@ const Dashboard = () => {
               type="number"
               value={cashPaid}
               onChange={(e) => setCashPaid(parseFloat(e.target.value))}
+              inputRef={cashPaidRef}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">Rs. </InputAdornment>
