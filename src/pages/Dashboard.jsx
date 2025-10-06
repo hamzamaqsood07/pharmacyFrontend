@@ -110,6 +110,7 @@ const Dashboard = () => {
 
     setTimeout(() => {
       quantityRef.current?.focus();
+      quantityRef.current?.select();
     }, 100);
   };
 

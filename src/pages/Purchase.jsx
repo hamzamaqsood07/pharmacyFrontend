@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Paper,
@@ -23,8 +23,8 @@ import {
   DialogContent,
   DialogActions,
   Alert,
-  Divider
-} from '@mui/material';
+  Divider,
+} from "@mui/material";
 import {
   Add,
   Remove,
@@ -32,20 +32,22 @@ import {
   ShoppingCart,
   Inventory,
   TrendingUp,
-  AttachMoney
-} from '@mui/icons-material';
-import { toast } from 'react-toastify';
-import api from '../utils/axiosConfig';
+  AttachMoney,
+} from "@mui/icons-material";
+import { toast } from "react-toastify";
+import api from "../utils/axiosConfig";
 
 const Purchase = () => {
   const [medicines, setMedicines] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filteredMedicines, setFilteredMedicines] = useState([]);
   const [selectedMedicine, setSelectedMedicine] = useState(null);
   const [packQuantity, setPackQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [purchaseData, setPurchaseData] = useState(null);
+  const quantityRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     fetchMedicines();
@@ -53,7 +55,7 @@ const Purchase = () => {
 
   useEffect(() => {
     if (searchTerm.length > 0) {
-      const filtered = medicines.filter(medicine =>
+      const filtered = medicines.filter((medicine) =>
         medicine.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredMedicines(filtered);
@@ -64,23 +66,29 @@ const Purchase = () => {
 
   const fetchMedicines = async () => {
     try {
-      const response = await api.get('/medicine');
+      const response = await api.get("/medicine");
       setMedicines(response.data);
     } catch (error) {
-      toast.error('Failed to fetch medicines');
+      toast.error("Failed to fetch medicines");
     }
   };
 
   const handleMedicineSelect = (medicine) => {
     setSelectedMedicine(medicine);
     setPackQuantity(1);
-    setSearchTerm('');
+    setSearchTerm("");
     setFilteredMedicines([]);
+    setTimeout(() => {
+      if (quantityRef.current) {
+        quantityRef.current.focus();
+        quantityRef.current.select();
+      }
+    }, 0);
   };
 
   const handlePurchase = async () => {
     if (!selectedMedicine || packQuantity <= 0) {
-      toast.error('Please select a medicine and enter valid quantity');
+      toast.error("Please select a medicine and enter valid quantity");
       return;
     }
 
@@ -91,8 +99,9 @@ const Purchase = () => {
       medicine: selectedMedicine,
       packQuantity,
       totalQuantity,
-      newStock
+      newStock,
     });
+
     setConfirmDialogOpen(true);
   };
 
@@ -100,35 +109,45 @@ const Purchase = () => {
     try {
       setLoading(true);
       await api.patch(`/medicine/incrementQty/${selectedMedicine.id}`, {
-        packQty: packQuantity
+        packQty: packQuantity,
       });
 
-      toast.success(`Stock updated successfully! Added ${purchaseData.totalQuantity} units to ${selectedMedicine.name}`);
-      
+      toast.success(
+        `Stock updated successfully! Added ${purchaseData.totalQuantity} units to ${selectedMedicine.name}`
+      );
+
       // Reset form
       setSelectedMedicine(null);
       setPackQuantity(1);
       setConfirmDialogOpen(false);
       setPurchaseData(null);
-      
+
       // Refresh medicines list
       fetchMedicines();
+
+      //to focus back on search input
+      setTimeout(() => {
+        if (searchInputRef.current) {
+          setSearchTerm("");
+          searchInputRef.current.focus();
+        }
+      }, 100);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update stock');
+      toast.error(error.response?.data?.message || "Failed to update stock");
     } finally {
       setLoading(false);
     }
   };
 
   const getStockStatus = (qty) => {
-    if (qty === 0) return { label: 'Out of Stock', color: 'error' };
-    if (qty < 10) return { label: 'Low Stock', color: 'warning' };
-    return { label: 'In Stock', color: 'success' };
+    if (qty === 0) return { label: "Out of Stock", color: "error" };
+    if (qty < 10) return { label: "Low Stock", color: "warning" };
+    return { label: "In Stock", color: "success" };
   };
 
   const totalMedicines = medicines.length;
-  const lowStockMedicines = medicines.filter(m => m.qty < 10).length;
-  const outOfStockMedicines = medicines.filter(m => m.qty === 0).length;
+  const lowStockMedicines = medicines.filter((m) => m.qty < 10).length;
+  const outOfStockMedicines = medicines.filter((m) => m.qty === 0).length;
 
   return (
     <Box>
@@ -192,15 +211,16 @@ const Purchase = () => {
         </Typography>
 
         <Grid container spacing={2} alignItems="flex-end">
-          <Grid item xs={12} sm={12} md={10} sx={{ width: '100%' }}>
+          <Grid item xs={12} sm={12} md={10} sx={{ width: "100%" }}>
             <Autocomplete
-              sx={{ width: '100%' }}
+              sx={{ width: "100%" }}
               freeSolo
               options={filteredMedicines}
-              getOptionLabel={(option) => option.name || ''}
+              inputValue={searchTerm}
+              getOptionLabel={(option) => option.name || ""}
               value={selectedMedicine}
               onChange={(event, newValue) => {
-                if (newValue && typeof newValue === 'object') {
+                if (newValue && typeof newValue === "object") {
                   handleMedicineSelect(newValue);
                 }
               }}
@@ -212,25 +232,26 @@ const Purchase = () => {
                   {...params}
                   label="Search Medicine"
                   placeholder="Type medicine name to search..."
+                  inputRef={searchInputRef}
                   fullWidth
                   size="large"
                   sx={{
-                    width: '100%',
-                    '& .MuiOutlinedInput-root': {
-                      fontSize: '1.1rem',
-                      minHeight: '56px',
-                      '& fieldset': {
-                        borderWidth: '2px',
+                    width: "100%",
+                    "& .MuiOutlinedInput-root": {
+                      fontSize: "1.1rem",
+                      minHeight: "56px",
+                      "& fieldset": {
+                        borderWidth: "2px",
                       },
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
+                      "&:hover fieldset": {
+                        borderColor: "primary.main",
                       },
-                      '&.Mui-focused fieldset': {
-                        borderWidth: '2px',
+                      "&.Mui-focused fieldset": {
+                        borderWidth: "2px",
                       },
                     },
-                    '& .MuiInputBase-input': {
-                      padding: '16px 14px',
+                    "& .MuiInputBase-input": {
+                      padding: "16px 14px",
                     },
                   }}
                   slotProps={{
@@ -238,19 +259,22 @@ const Purchase = () => {
                       ...params.InputProps,
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Search sx={{ fontSize: '1.2rem' }} />
+                          <Search sx={{ fontSize: "1.2rem" }} />
                         </InputAdornment>
                       ),
-                    }
+                    },
                   }}
                 />
               )}
               renderOption={(props, option) => (
                 <Box component="li" {...props}>
                   <Box>
-                    <Typography variant="body1" fontWeight="medium">{option.name}</Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {option.name}
+                    </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Current Stock: {option.qty} Units | Pack Size: {option.packSize} Units
+                      Current Stock: {option.qty} Units | Pack Size:{" "}
+                      {option.packSize} Units
                     </Typography>
                   </Box>
                 </Box>
@@ -263,11 +287,16 @@ const Purchase = () => {
               label="Number of packs to add"
               type="number"
               value={packQuantity}
+              inputRef={quantityRef}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handlePurchase(); // open confirm modal
+                }
+              }}
               onChange={(e) => setPackQuantity(parseInt(e.target.value))}
               inputProps={{ min: 1 }}
               fullWidth
               size="large"
-              // helperText="Number of packs to add"
             />
           </Grid>
 
@@ -279,7 +308,7 @@ const Purchase = () => {
               disabled={!selectedMedicine || packQuantity <= 0}
               fullWidth
               size="large"
-              sx={{ height: '56px' }}
+              sx={{ height: "56px" }}
             >
               Add Stock
             </Button>
@@ -290,13 +319,18 @@ const Purchase = () => {
           <Box mt={2}>
             <Alert severity="info">
               <Typography variant="body2">
-                <strong>{selectedMedicine.name}</strong> - Current Stock: {selectedMedicine.qty} units
+                <strong>{selectedMedicine.name}</strong> - Current Stock:{" "}
+                {selectedMedicine.qty} units
                 <br />
                 Pack Size: {selectedMedicine.packSize} units per pack
                 <br />
-                Adding {packQuantity} pack(s) = {selectedMedicine.packSize * packQuantity} units
+                Adding {packQuantity} pack(s) ={" "}
+                {selectedMedicine.packSize * packQuantity} units
                 <br />
-                New Stock: {selectedMedicine.qty + (selectedMedicine.packSize * packQuantity)} units
+                New Stock:{" "}
+                {selectedMedicine.qty +
+                  selectedMedicine.packSize * packQuantity}{" "}
+                units
               </Typography>
             </Alert>
           </Box>
@@ -371,7 +405,17 @@ const Purchase = () => {
       </Paper>
 
       {/* Confirmation Dialog */}
-      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            confirmPurchase(); // open confirm modal
+          }
+        }}
+      >
         <DialogTitle>Confirm Stock Purchase</DialogTitle>
         <DialogContent>
           {purchaseData && (
