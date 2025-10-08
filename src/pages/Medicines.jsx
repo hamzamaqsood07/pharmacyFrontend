@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Paper,
@@ -53,6 +53,19 @@ const Medicines = () => {
     packSize: "",
     qty: "",
   });
+
+  const searchRef = useRef(null)
+
+  useEffect(() => {
+      const handleKeyDown = (e) => {
+        if (e.ctrlKey && e.key === "f") {
+          e.preventDefault();
+          searchRef.current?.focus();
+        }
+      };
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }, []);
 
   useEffect(() => {
     fetchMedicines();
@@ -251,6 +264,7 @@ const Medicines = () => {
         <TextField
           label="Search Medicines"
           value={searchTerm}
+          inputRef={searchRef}
           onChange={(e) => setSearchTerm(e.target.value)}
           InputProps={{
             startAdornment: (

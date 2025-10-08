@@ -50,6 +50,18 @@ const Purchase = () => {
   const searchInputRef = useRef(null);
 
   useEffect(() => {
+    const handleKeyDown = (e)=>{
+      if(e.ctrlKey && e.key === 'f'){
+        e.preventDefault()
+        searchInputRef.current?.focus();
+      }
+    }
+    document.addEventListener('keydown',handleKeyDown)
+    return ()=>document.removeEventListener('keydown',handleKeyDown)
+  }, [])
+  
+
+  useEffect(() => {
     fetchMedicines();
   }, []);
 
@@ -412,7 +424,7 @@ const Purchase = () => {
         fullWidth
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            confirmPurchase(); // open confirm modal
+            confirmPurchase(); 
           }
         }}
       >

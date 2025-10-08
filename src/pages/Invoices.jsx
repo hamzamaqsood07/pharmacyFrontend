@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Paper,
@@ -21,27 +21,31 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Divider
-} from '@mui/material';
-import {
-  Search,
-  Receipt,
-  AttachMoney,
-  ExpandMore,
-  Visibility,
-  Print,
-  Download
-} from '@mui/icons-material';
-import { toast } from 'react-toastify';
-import api from '../utils/axiosConfig';
+  Divider,
+} from "@mui/material";
+import { Search, Receipt, Visibility, Print } from "@mui/icons-material";
+import { toast } from "react-toastify";
+import api from "../utils/axiosConfig";
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
   const [filteredInvoices, setFilteredInvoices] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const searchRef = useRef(null)
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key === "f") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     fetchInvoices();
@@ -49,7 +53,7 @@ const Invoices = () => {
 
   useEffect(() => {
     if (searchTerm.length > 0) {
-      const filtered = invoices.filter(invoice => {
+      const filtered = invoices.filter((invoice) => {
         const searchLower = searchTerm.toLowerCase();
         return (
           invoice.id.toLowerCase().includes(searchLower) ||
@@ -66,10 +70,11 @@ const Invoices = () => {
   const fetchInvoices = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/invoice');
+      const response = await api.get("/invoice");
+      console.log(response.data);
       setInvoices(response.data);
     } catch (error) {
-      toast.error('Failed to fetch invoices');
+      toast.error("Failed to fetch invoices");
     } finally {
       setLoading(false);
     }
@@ -82,32 +87,34 @@ const Invoices = () => {
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
-      case 'completed':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'cancelled':
-        return 'error';
+      case "completed":
+        return "success";
+      case "pending":
+        return "warning";
+      case "cancelled":
+        return "error";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const calculateTotals = () => {
     const totalInvoices = invoices.length;
-    const completedInvoices = invoices.filter(inv => inv.status === 'COMPLETED').length;
+    const completedInvoices = invoices.filter(
+      (inv) => inv.status === "completed"
+    ).length;
     const totalRevenue = invoices
-      .filter(inv => inv.status === 'COMPLETED')
+      .filter((inv) => inv.status === "completed")
       .reduce((sum, inv) => sum + (inv.netTotal || 0), 0);
 
     return { totalInvoices, completedInvoices, totalRevenue };
@@ -158,7 +165,9 @@ const Invoices = () => {
             <CardContent>
               <Box display="flex" alignItems="center">
                 <Box>
-                  <Typography variant="h6">Rs. {totalRevenue.toFixed(2)}</Typography>
+                  <Typography variant="h6">
+                    Rs. {totalRevenue.toFixed(2)}
+                  </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Total Revenue
                   </Typography>
@@ -178,6 +187,7 @@ const Invoices = () => {
         <TextField
           label="Search Invoices"
           value={searchTerm}
+          inputRef={searchRef}
           onChange={(e) => setSearchTerm(e.target.value)}
           InputProps={{
             startAdornment: (
@@ -219,7 +229,7 @@ const Invoices = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {invoice.user?.name || 'N/A'}
+                      {invoice.user?.name || "N/A"}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -231,17 +241,17 @@ const Invoices = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium">
-                      {invoice.grossTotal?.toFixed(2) || '0.00'}
+                      {invoice.grossTotal?.toFixed(2) || "0.00"}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {invoice.discount?.toFixed(2) || '0.00'}
+                      {invoice.discount?.toFixed(2) || "0.00"}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium">
-                      {invoice.netTotal?.toFixed(2) || '0.00'}
+                      {invoice.netTotal?.toFixed(2) || "0.00"}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -261,17 +271,19 @@ const Invoices = () => {
         {filteredInvoices.length === 0 && !loading && (
           <Box textAlign="center" py={4}>
             <Typography variant="body1" color="text.secondary">
-              {searchTerm ? 'No invoices found matching your search' : 'No invoices available'}
+              {searchTerm
+                ? "No invoices found matching your search"
+                : "No invoices available"}
             </Typography>
           </Box>
         )}
       </Paper>
 
       {/* Invoice Detail Dialog */}
-      <Dialog 
-        open={detailDialogOpen} 
-        onClose={() => setDetailDialogOpen(false)} 
-        maxWidth="md" 
+      <Dialog
+        open={detailDialogOpen}
+        onClose={() => setDetailDialogOpen(false)}
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle>
@@ -292,19 +304,21 @@ const Invoices = () => {
                     Invoice Information
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Date:</strong> {formatDate(selectedInvoice.createdAt)}
+                    <strong>Date:</strong>{" "}
+                    {formatDate(selectedInvoice.createdAt)}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Status:</strong> 
-                    <Chip 
-                      label={selectedInvoice.status} 
-                      color={getStatusColor(selectedInvoice.status)} 
-                      size="small" 
+                    <strong>Status:</strong>
+                    <Chip
+                      label={selectedInvoice.status}
+                      color={getStatusColor(selectedInvoice.status)}
+                      size="small"
                       sx={{ ml: 1 }}
                     />
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Cashier:</strong> {selectedInvoice.user?.name || 'N/A'}
+                    <strong>Cashier:</strong>{" "}
+                    {selectedInvoice.user?.firstName || "N/A"}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -312,24 +326,28 @@ const Invoices = () => {
                     Financial Summary
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Gross Total:</strong> Rs. {selectedInvoice.grossTotal?.toFixed(2) || '0.00'}
+                    <strong>Gross Total:</strong> Rs.{" "}
+                    {selectedInvoice.grossTotal?.toFixed(2)}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Discount:</strong> Rs. {selectedInvoice.discount?.toFixed(2) || '0.00'}
+                    <strong>Discount:</strong> Rs.{" "}
+                    {selectedInvoice.discount?.toFixed(2)}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Net Total:</strong> Rs. {selectedInvoice.netTotal?.toFixed(2) || '0.00'}
+                    <strong>Net Total:</strong> Rs.{" "}
+                    {selectedInvoice.netTotal?.toFixed(2) }
                   </Typography>
-                  {selectedInvoice.cashPaid && (
+                  
                     <Typography variant="body2">
-                      <strong>Cash Paid:</strong> Rs. {selectedInvoice.cashPaid.toFixed(2)}
+                      <strong>Cash Paid:</strong> Rs.{" "}
+                      {selectedInvoice.cashPaid?.toFixed(2)}
                     </Typography>
-                  )}
-                  {selectedInvoice.balance && (
+                  
                     <Typography variant="body2">
-                      <strong>Balance:</strong> Rs. {selectedInvoice.balance.toFixed(2)}
+                      <strong>Balance:</strong> Rs.{" "}
+                      {selectedInvoice.balance?.toFixed(2)}
                     </Typography>
-                  )}
+                  
                 </Grid>
               </Grid>
 
@@ -339,7 +357,8 @@ const Invoices = () => {
               <Typography variant="h6" gutterBottom>
                 Invoice Items
               </Typography>
-              {selectedInvoice.invoiceMedicines && selectedInvoice.invoiceMedicines.length > 0 ? (
+              {selectedInvoice.invoiceMedicines &&
+              selectedInvoice.invoiceMedicines.length > 0 ? (
                 <TableContainer>
                   <Table size="small">
                     <TableHead>
@@ -355,22 +374,22 @@ const Invoices = () => {
                         <TableRow key={index}>
                           <TableCell>
                             <Typography variant="body2" fontWeight="medium">
-                              {item.medicine?.name || 'Unknown Medicine'}
+                              {item.medicine?.name || "Unknown Medicine"}
                             </Typography>
                           </TableCell>
                           <TableCell>
                             <Typography variant="body2">
-                              {item.salesPrice?.toFixed(2) || '0.00'}
+                              {item.salesPrice?.toFixed(2) || "0.00"}
                             </Typography>
                           </TableCell>
                           <TableCell>
-                            <Typography variant="body2">
-                              {item.qty}
-                            </Typography>
+                            <Typography variant="body2">{item.qty}</Typography>
                           </TableCell>
                           <TableCell>
                             <Typography variant="body2" fontWeight="medium">
-                              {((item.salesPrice || 0) * (item.qty || 0)).toFixed(2)}
+                              {(
+                                (item.salesPrice || 0) * (item.qty || 0)
+                              ).toFixed(2)}
                             </Typography>
                           </TableCell>
                         </TableRow>

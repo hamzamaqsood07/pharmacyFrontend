@@ -234,7 +234,7 @@ const Dashboard = () => {
 
     document.addEventListener("keydown", handleKeyPress);
     return () => document.removeEventListener("keydown", handleKeyPress);
-  }, [selectedMedicine, quantity, currentInvoice]);
+  }, [currentInvoice]);
 
   return (
     <Box>
