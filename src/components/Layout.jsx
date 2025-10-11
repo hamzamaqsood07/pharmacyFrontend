@@ -36,6 +36,7 @@ const Layout = ({ children }) => {
           return;
         }
         const response = await api.get("/auth/me");
+        console.log(response.data.organization)
         setUser(response.data.user);
         setOrganization(response.data.organization);
       } catch (error) {
