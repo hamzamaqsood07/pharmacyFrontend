@@ -71,7 +71,6 @@ const Invoices = () => {
     try {
       setLoading(true);
       const response = await api.get("/invoice");
-      console.log(response.data);
       setInvoices(response.data);
     } catch (error) {
       toast.error("Failed to fetch invoices");
@@ -229,7 +228,7 @@ const Invoices = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {invoice.user?.name || "N/A"}
+                      {invoice.customer || "N/A"}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -320,6 +319,13 @@ const Invoices = () => {
                     <strong>Cashier:</strong>{" "}
                     {selectedInvoice.user?.firstName || "N/A"}
                   </Typography>
+
+                  {selectedInvoice.customer && (
+                    <Typography variant="body2">
+                    <strong>Customer:</strong>{" "}
+                    {selectedInvoice.customer || "N/A"}
+                  </Typography>
+                  )}
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="h6" gutterBottom>
@@ -407,16 +413,6 @@ const Invoices = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDetailDialogOpen(false)}>Close</Button>
-          <Button
-            variant="contained"
-            startIcon={<Print />}
-            onClick={() => {
-              // Implement print functionality
-              window.print();
-            }}
-          >
-            Print
-          </Button>
         </DialogActions>
       </Dialog>
     </Box>

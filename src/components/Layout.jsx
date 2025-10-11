@@ -69,9 +69,49 @@ const Layout = ({ children }) => {
           p: 2,
         }}
       >
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          {organization?.orgTitle || "Pharmacy"}
-        </Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            mb: 2,
+          }}
+        >
+          {organization?.logoUrl ? (
+            <Box
+              component="img"
+              src={organization.logoUrl}
+              alt="Organization Logo"
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: "8px",
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: "8px",
+                backgroundColor: "#ddd",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                fontSize: "1rem",
+              }}
+            >
+              {organization?.orgTitle?.charAt(0) || "P"}
+            </Box>
+          )}
+
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            {organization?.orgTitle || "Pharmacy"}
+          </Typography>
+        </Box>
 
         <Divider sx={{ mb: 2 }} />
 
