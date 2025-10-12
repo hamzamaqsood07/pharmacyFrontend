@@ -1,7 +1,5 @@
 import './App.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
 import Login from './auth/Login'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
@@ -10,6 +8,8 @@ import Purchase from './pages/Purchase'
 import Invoices from './pages/Invoices'
 import Organization from './pages/Organization'
 import ProtectedRoute from './components/ProtectedRoute'
+import { ThemeProvider } from './contexts/ThemeContext'
+import ThemedToastContainer from './components/ThemedToastContainer'
 
 function App() {
   const router = createBrowserRouter([
@@ -40,21 +40,10 @@ function App() {
   ])
 
   return (
-    <>
+    <ThemeProvider>
       <RouterProvider router={router} />
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-    </>
+      <ThemedToastContainer />
+    </ThemeProvider>
   )
 }
 

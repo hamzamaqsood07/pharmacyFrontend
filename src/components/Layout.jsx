@@ -20,12 +20,14 @@ import MedicationIcon from "@mui/icons-material/Medication";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import BusinessIcon from "@mui/icons-material/Business";
+import { useTheme } from "../contexts/ThemeContext";
 
 const Layout = ({ children }) => {
   const [user, setUser] = useState(null);
   const [organization, setOrganization] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
+  const { themeColors } = useTheme();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -48,6 +50,30 @@ const Layout = ({ children }) => {
     fetchUserData();
   }, [navigate]);
 
+  // Update CSS custom properties when theme colors change
+  useEffect(() => {
+    if (themeColors) {
+      const root = document.documentElement;
+      root.style.setProperty('--primary-color', themeColors.primaryColor);
+      root.style.setProperty('--secondary-color', themeColors.secondaryColor);
+      
+      // Create lighter versions for hover states
+      const lightenColor = (color, amount) => {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * amount * 100);
+        const R = (num >> 16) + amt;
+        const G = (num >> 8 & 0x00FF) + amt;
+        const B = (num & 0x0000FF) + amt;
+        return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+          (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+          (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+      };
+      
+      root.style.setProperty('--primary-color-light', lightenColor(themeColors.primaryColor, 0.3));
+      root.style.setProperty('--secondary-color-light', lightenColor(themeColors.secondaryColor, 0.3));
+    }
+  }, [themeColors]);
+
   const handleProfileMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleProfileMenuClose = () => setAnchorEl(null);
   const handleLogout = () => {
@@ -62,12 +88,13 @@ const Layout = ({ children }) => {
         sx={{
           width: 240,
           height: "100vh",
-          backgroundColor: "#f8f9fa",
-          borderRight: "1px solid #ddd",
+          backgroundColor: themeColors?.primaryColor ? `${themeColors.primaryColor}08` : "#f8f9fa",
+          borderRight: `2px solid ${themeColors?.primaryColor || "#1976d2"}`,
           position: "fixed",
           top: 0,
           left: 0,
           p: 2,
+          boxShadow: `0 0 20px ${themeColors?.primaryColor || "#1976d2"}30`,
         }}
       >
 
@@ -196,8 +223,9 @@ const Layout = ({ children }) => {
           ml: "240px",
           mt: 8,
           p: 3,
-          backgroundColor: "#f5f5f5",
+          backgroundColor: themeColors?.primaryColor ? `${themeColors.primaryColor}05` : "#f5f5f5",
           minHeight: "100vh",
+          backgroundImage: `linear-gradient(135deg, ${themeColors?.primaryColor || "#1976d2"}05 0%, ${themeColors?.secondaryColor || "#dc004e"}05 100%)`,
         }}
       >
         {children}

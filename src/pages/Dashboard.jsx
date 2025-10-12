@@ -35,6 +35,7 @@ import {
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import api from "../utils/axiosConfig";
+import { useTheme } from "../contexts/ThemeContext";
 
 const Dashboard = () => {
   const [medicines, setMedicines] = useState([]);
@@ -50,6 +51,7 @@ const Dashboard = () => {
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [finalizedInvoice, setFinalizedInvoice] = useState(null);
+  const { themeColors } = useTheme();
 
   const searchInputRef = useRef(null); // Ref for the search input field
   const quantityRef = useRef(null); // Ref for the quantity input field
@@ -297,8 +299,13 @@ const Dashboard = () => {
       </Box>
 
       {/* Medicine Search and Add Section */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
+      <Paper sx={{ 
+        p: 3, 
+        mb: 3,
+        background: `linear-gradient(135deg, ${themeColors?.primaryColor || '#1976d2'}05 0%, ${themeColors?.secondaryColor || '#dc004e'}05 100%)`,
+        border: `1px solid ${themeColors?.primaryColor || '#1976d2'}20`
+      }}>
+        <Typography variant="h6" gutterBottom sx={{ color: themeColors?.primaryColor }}>
           Add Medicine to Invoice
         </Typography>
 
