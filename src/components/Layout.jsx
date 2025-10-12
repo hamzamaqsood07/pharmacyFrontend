@@ -21,6 +21,8 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import BusinessIcon from "@mui/icons-material/Business";
 import { useTheme } from "../contexts/ThemeContext";
+import { useLogo } from "../contexts/LogoContext";
+
 
 const Layout = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -28,6 +30,8 @@ const Layout = ({ children }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
   const { themeColors } = useTheme();
+  const { logoUrl, setLogoUrl } = useLogo();
+
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -38,9 +42,9 @@ const Layout = ({ children }) => {
           return;
         }
         const response = await api.get("/auth/me");
-        console.log(response.data.organization)
         setUser(response.data.user);
         setOrganization(response.data.organization);
+        setLogoUrl(response.data.organization.logoUrl);
       } catch (error) {
         console.error("Error fetching user data:", error);
         localStorage.removeItem("token");
@@ -86,7 +90,7 @@ const Layout = ({ children }) => {
       {/* Sidebar */}
       <Box
         sx={{
-          width: 240,
+          width: 220,
           height: "100vh",
           backgroundColor: themeColors?.primaryColor ? `${themeColors.primaryColor}08` : "#f8f9fa",
           borderRight: `2px solid ${themeColors?.primaryColor || "#1976d2"}`,
@@ -102,18 +106,19 @@ const Layout = ({ children }) => {
           sx={{
             display: "flex",
             alignItems: "center",
+            justifyContent:"center",
             gap: 1.5,
             mb: 2,
           }}
         >
-          {organization?.logoUrl ? (
+          {logoUrl? (
             <Box
               component="img"
-              src={organization.logoUrl}
+              src={logoUrl}
               alt="Organization Logo"
               sx={{
-                width: 40,
-                height: 40,
+                width: 80,
+                height: 70,
                 borderRadius: "8px",
                 objectFit: "cover",
               }}
@@ -136,9 +141,7 @@ const Layout = ({ children }) => {
             </Box>
           )}
 
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {organization?.orgTitle || "Pharmacy"}
-          </Typography>
+          
         </Box>
 
         <Divider sx={{ mb: 2 }} />
@@ -177,12 +180,12 @@ const Layout = ({ children }) => {
         position="fixed"
         sx={{
           ml: "240px",
-          width: `calc(100% - 240px)`,
+          width: `calc(100% - 220px)`,
         }}
       >
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Pharmacy Management System
+            {organization?.orgTitle || "Pharmacy Management"}
           </Typography>
           <IconButton onClick={handleProfileMenuOpen} color="inherit">
             <Avatar sx={{ width: 32, height: 32 }}>
@@ -220,7 +223,7 @@ const Layout = ({ children }) => {
         component="main"
         sx={{
           flexGrow: 1,
-          ml: "240px",
+          ml: "222px",
           mt: 8,
           p: 3,
           backgroundColor: themeColors?.primaryColor ? `${themeColors.primaryColor}05` : "#f5f5f5",

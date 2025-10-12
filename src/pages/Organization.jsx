@@ -31,6 +31,7 @@ import {
 import { toast } from 'react-toastify';
 import api from '../utils/axiosConfig';
 import ThemeColorPicker from '../components/ThemeColorPicker';
+import { useLogo } from "../contexts/LogoContext";
 
 const Organization = () => {
   const [organization, setOrganization] = useState(null);
@@ -40,6 +41,8 @@ const Organization = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
+  const { setLogoUrl } = useLogo();
+
 
   const [formData, setFormData] = useState({
     orgTitle: '',
@@ -117,8 +120,7 @@ const Organization = () => {
       }
 
       setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      setPreviewUrl(URL.createObjectURL(file))
       setLogoDialogOpen(true);
     }
   };
@@ -138,6 +140,7 @@ const Organization = () => {
       });
 
       toast.success('Logo uploaded successfully');
+      setLogoUrl(previewUrl);
       setLogoDialogOpen(false);
       setSelectedFile(null);
       setPreviewUrl(null);
@@ -152,6 +155,7 @@ const Organization = () => {
   const handleLogoRemove = async () => {
     try {
       await api.delete('/organization/logo');
+      setLogoUrl(null);
       toast.success('Logo removed successfully');
       fetchOrganization();
     } catch (error) {
@@ -161,7 +165,7 @@ const Organization = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h5" gutterBottom>
         Organization Profile
       </Typography>
 
