@@ -72,63 +72,8 @@ export const ThemeProvider = ({ children }) => {
           dark: darkenColor(colors.secondaryColor, 0.3),
           contrastText: '#ffffff',
         },
-        error: {
-          main: colors.secondaryColor,
-          light: lightenColor(colors.secondaryColor, 0.3),
-          dark: darkenColor(colors.secondaryColor, 0.3),
-          contrastText: '#ffffff',
-        },
-        warning: {
-          main: colors.secondaryColor,
-          light: lightenColor(colors.secondaryColor, 0.3),
-          dark: darkenColor(colors.secondaryColor, 0.3),
-          contrastText: '#ffffff',
-        },
-        info: {
-          main: colors.secondaryColor,
-          light: lightenColor(colors.secondaryColor, 0.3),
-          dark: darkenColor(colors.secondaryColor, 0.3),
-          contrastText: '#ffffff',
-        },
-        success: {
-          main: colors.primaryColor,
-          light: lightenColor(colors.primaryColor, 0.3),
-          dark: darkenColor(colors.primaryColor, 0.3),
-          contrastText: '#ffffff',
-        },
-      },
-      components: {
-        MuiButton: {
-          styleOverrides: {
-            root: {
-              textTransform: 'none',
-              borderRadius: 8,
-            },
-          },
-        },
-        MuiCard: {
-          styleOverrides: {
-            root: {
-              borderRadius: 12,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            },
-          },
-        },
-        MuiAppBar: {
-          styleOverrides: {
-            root: {
-              backgroundColor: colors.primaryColor,
-            },
-          },
-        },
-        MuiChip: {
-          styleOverrides: {
-            root: {
-              borderRadius: 8,
-            },
-          },
-        },
-      },
+      }
+      
     });
   };
 
