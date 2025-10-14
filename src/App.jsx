@@ -8,7 +8,7 @@ import Purchase from "./pages/Purchase";
 import Invoices from "./pages/Invoices";
 import Organization from "./pages/Organization";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { ThemeProvider } from "./contexts/ThemeContext";
+import { ThemeProvider } from "./components/ThemeProvider";
 import ThemedToastContainer from "./components/ThemedToastContainer";
 import { LogoProvider } from "./components/LogoProvider";
 

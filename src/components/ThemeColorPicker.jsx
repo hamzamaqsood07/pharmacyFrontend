@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Box,
   Paper,
@@ -12,11 +12,11 @@ import {
   Chip,
 } from '@mui/material';
 import { Palette, Save, Refresh } from '@mui/icons-material';
-import { useTheme } from '../contexts/ThemeContext';
 import { toast } from 'react-toastify';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 const ThemeColorPicker = () => {
-  const { themeColors, updateThemeColors } = useTheme();
+  const { themeColors, updateThemeColors } = useContext(ThemeContext);
   const [localColors, setLocalColors] = useState(themeColors);
   const [saving, setSaving] = useState(false);
 

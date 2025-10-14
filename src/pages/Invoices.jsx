@@ -289,7 +289,7 @@ const Invoices = () => {
           Invoice Details
           {selectedInvoice && (
             <Typography variant="body2" color="text.secondary">
-              ID: {selectedInvoice.id}
+              ID: #INV-{String(selectedInvoice.invoiceNumber).padStart(6, '0')}
             </Typography>
           )}
         </DialogTitle>

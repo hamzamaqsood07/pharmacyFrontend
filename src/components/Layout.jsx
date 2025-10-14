@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   AppBar,
   Toolbar,
@@ -20,8 +20,9 @@ import MedicationIcon from "@mui/icons-material/Medication";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import BusinessIcon from "@mui/icons-material/Business";
-import { useTheme } from "../contexts/ThemeContext";
 import { useLogo } from "../contexts/LogoContext";
+import { ThemeContext } from "../contexts/ThemeContext";
+
 
 
 const Layout = ({ children }) => {
@@ -29,7 +30,7 @@ const Layout = ({ children }) => {
   const [organization, setOrganization] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
-  const { themeColors } = useTheme();
+  const { themeColors } = useContext(ThemeContext);
   const { logoUrl, setLogoUrl } = useLogo();
 
 

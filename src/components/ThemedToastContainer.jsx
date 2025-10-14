@@ -1,10 +1,10 @@
-import React from 'react';
+import  { useContext } from 'react';
 import { ToastContainer } from 'react-toastify';
-import { useTheme } from '../contexts/ThemeContext';
 import 'react-toastify/dist/ReactToastify.css';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 const ThemedToastContainer = () => {
-  const { themeColors } = useTheme();
+  const { themeColors } = useContext(ThemeContext);
 
   const toastStyles = {
     '--toastify-color-light': '#fff',

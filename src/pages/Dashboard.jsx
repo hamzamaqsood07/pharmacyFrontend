@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import {
   Box,
   Paper,
@@ -35,7 +35,7 @@ import {
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import api from "../utils/axiosConfig";
-import { useTheme } from "../contexts/ThemeContext";
+import { ThemeContext } from "../contexts/ThemeContext";
 
 const Dashboard = () => {
   const [medicines, setMedicines] = useState([]);
@@ -51,7 +51,7 @@ const Dashboard = () => {
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [finalizedInvoice, setFinalizedInvoice] = useState(null);
-  const { themeColors } = useTheme();
+  const { themeColors } =  useContext(ThemeContext);
 
   const searchInputRef = useRef(null); // Ref for the search input field
   const quantityRef = useRef(null); // Ref for the quantity input field
@@ -652,7 +652,7 @@ const Dashboard = () => {
           Invoice Details
           {finalizedInvoice && (
             <Typography variant="body2" color="text.secondary">
-              ID: {finalizedInvoice.id}
+              ID: #INV-{String(finalizedInvoice.invoiceNumber).padStart(6, '0')}
             </Typography>
           )}
         </DialogTitle>
