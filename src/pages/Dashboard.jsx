@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import {
   Box,
   Paper,
@@ -30,11 +30,12 @@ import {
   Delete,
   Search,
   Receipt,
-  AttachMoney,
+  Print,
   Percent,
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import api from "../utils/axiosConfig";
+import { ThemeContext } from "../contexts/ThemeContext";
 
 const Dashboard = () => {
   const [medicines, setMedicines] = useState([]);
@@ -47,24 +48,26 @@ const Dashboard = () => {
   const [cashPaid, setCashPaid] = useState(0);
   const [finalizeDialogOpen, setFinalizeDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [finalizedInvoice, setFinalizedInvoice] = useState(null);
+  const { themeColors } =  useContext(ThemeContext);
 
-  const searchInputRef = useRef(null);// Ref for the search input field
-  const quantityRef = useRef(null);// Ref for the quantity input field
-  const discountRef = useRef(null);// Ref for the discount in dialog box
-  const cashPaidRef = useRef(null);// Ref for the cash paid in dialog box
+  const searchInputRef = useRef(null); // Ref for the search input field
+  const quantityRef = useRef(null); // Ref for the quantity input field
+  const discountRef = useRef(null); // Ref for the discount in dialog box
+  const cashPaidRef = useRef(null); // Ref for the cash paid in dialog box
 
   useEffect(() => {
     if (finalizeDialogOpen) {
-    setTimeout(() => {
-      if (discountRef.current) {
-        discountRef.current.focus();
-        discountRef.current.select();
-      }
-      
-    }, 100);
-  }
-  }, [finalizeDialogOpen])
-  
+      setTimeout(() => {
+        if (discountRef.current) {
+          discountRef.current.focus();
+          discountRef.current.select();
+        }
+      }, 100);
+    }
+  }, [finalizeDialogOpen]);
 
   useEffect(() => {
     fetchMedicines();
@@ -177,16 +180,18 @@ const Dashboard = () => {
 
     try {
       setLoading(true);
-      await api.post("/invoice/finalize", {
+      const response = await api.post("/invoice/finalize", {
         cashPaid,
         discountedPercentage: discountPercentage,
+        customerName: customerName || "",
       });
-
-      toast.success("Invoice finalized successfully");
+      const { message } = response.data;
+      toast.success(message);
       setFinalizeDialogOpen(false);
       setCurrentInvoice(null);
       setDiscountPercentage(0);
       setCashPaid(0);
+      setCustomerName("");
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to finalize invoice"
@@ -210,7 +215,7 @@ const Dashboard = () => {
     if (!currentInvoice) return { grossTotal: 0, discount: 0, netTotal: 0 };
 
     const grossTotal = currentInvoice.grossTotal || 0;
-    const discount = (grossTotal * discountPercentage) / 100;
+    const discount = (grossTotal * discountPercentage) / 100 || 0;
     const netTotal = grossTotal - discount;
 
     return { grossTotal, discount, netTotal };
@@ -234,7 +239,40 @@ const Dashboard = () => {
 
     document.addEventListener("keydown", handleKeyPress);
     return () => document.removeEventListener("keydown", handleKeyPress);
-  }, [selectedMedicine, quantity, currentInvoice]);
+  }, [currentInvoice]);
+
+  const handleFinalizeAndPrint = async () => {
+    if (cashPaid < netTotal) {
+      toast.error("Cash paid must be at least equal to net total");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await api.post("/invoice/finalize", {
+        cashPaid,
+        discountedPercentage: discountPercentage,
+        customerName: customerName || "",
+      });
+
+      const { updatedInvoice } = response.data;
+      setFinalizedInvoice(updatedInvoice);
+      setCurrentInvoice(null);
+      setFinalizeDialogOpen(false);
+      setDiscountPercentage(0);
+      setCashPaid(0);
+      setCustomerName("");
+      setTimeout(() => {
+        setPrintDialogOpen(true);
+      }, 300);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to finalize invoice"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Box>
@@ -261,8 +299,13 @@ const Dashboard = () => {
       </Box>
 
       {/* Medicine Search and Add Section */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
+      <Paper sx={{ 
+        p: 3, 
+        mb: 3,
+        background: `linear-gradient(135deg, ${themeColors?.primaryColor || '#1976d2'}05 0%, ${themeColors?.secondaryColor || '#dc004e'}05 100%)`,
+        border: `1px solid ${themeColors?.primaryColor || '#1976d2'}20`
+      }}>
+        <Typography variant="h6" gutterBottom sx={{ color: themeColors?.primaryColor }}>
           Add Medicine to Invoice
         </Typography>
 
@@ -483,13 +526,17 @@ const Dashboard = () => {
                     <Typography>{grossTotal?.toFixed(2)}</Typography>
                   </Box>
                   <Box display="flex" justifyContent="space-between">
-                    <Typography>Discount ({discountPercentage}%):</Typography>
+                    <Typography>
+                      Discount ({discountPercentage || 0}%):
+                    </Typography>
                     <Typography>-{discount?.toFixed(2)}</Typography>
                   </Box>
                   <Divider sx={{ my: 1 }} />
                   <Box display="flex" justifyContent="space-between">
                     <Typography variant="h6">Net Total:</Typography>
-                    <Typography variant="h6">{netTotal?.toFixed(2)}</Typography>
+                    <Typography variant="h6">
+                      {netTotal?.toFixed(2) || 0}
+                    </Typography>
                   </Box>
                 </CardContent>
               </Card>
@@ -511,17 +558,21 @@ const Dashboard = () => {
             <TextField
               label="Discount Percentage"
               type="number"
-              value={discountPercentage}
+              placeholder="0"
+              value={discountPercentage || ""}
               onChange={(e) =>
                 setDiscountPercentage(parseFloat(e.target.value))
               }
               inputRef={discountRef}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Percent />
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Percent />
+                    </InputAdornment>
+                  ),
+                  inputProps: { min: 0 },
+                },
               }}
               fullWidth
               sx={{ mb: 2 }}
@@ -529,16 +580,33 @@ const Dashboard = () => {
             <TextField
               label="Cash Paid"
               type="number"
-              value={cashPaid}
+              placeholder="0"
+              value={cashPaid || ""}
               onChange={(e) => setCashPaid(parseFloat(e.target.value))}
               inputRef={cashPaidRef}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">Rs. </InputAdornment>
-                ),
+              slots={{
+                inputAdornmentStart: InputAdornment,
+              }}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">Rs.</InputAdornment>
+                  ),
+                  inputProps: { min: 0 },
+                },
               }}
               fullWidth
+              sx={{ mb: 2 }}
             />
+
+            <TextField
+              label="Customer Name (Optional)"
+              placeholder="Enter customer name"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              fullWidth
+            />
+
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
               Net Total: Rs. {netTotal.toFixed(2)}
             </Typography>
@@ -554,12 +622,137 @@ const Dashboard = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFinalizeDialogOpen(false)}>Cancel</Button>
+
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={loading || cashPaid < netTotal || !cashPaid}
+            onClick={handleFinalizeAndPrint}
+          >
+            Finalize & Print
+          </Button>
+
           <Button
             onClick={handleFinalizeInvoice}
             variant="contained"
-            disabled={loading || cashPaid < netTotal}
+            disabled={loading || cashPaid < netTotal || !cashPaid}
           >
             Finalize Invoice
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={printDialogOpen}
+        onClose={() => setPrintDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Invoice Details
+          {finalizedInvoice && (
+            <Typography variant="body2" color="text.secondary">
+              ID: #INV-{String(finalizedInvoice.invoiceNumber).padStart(6, '0')}
+            </Typography>
+          )}
+        </DialogTitle>
+
+        <DialogContent id="print-section">
+          {finalizedInvoice && (
+            <Box>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="h6" gutterBottom>
+                    Invoice Info
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Date:</strong>{" "}
+                    {new Date(finalizedInvoice.createdAt).toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Status:</strong> {finalizedInvoice.status}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Cashier:</strong>{" "}
+                    {finalizedInvoice.user?.firstName || "N/A"}
+                  </Typography>
+                  {finalizedInvoice.customer && (
+                    <Typography variant="body2">
+                      <strong>Customer:</strong>{" "}
+                      {finalizedInvoice.customer || "N/A"}
+                    </Typography>
+                  )}
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="h6" gutterBottom>
+                    Financial Summary
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Gross Total:</strong> Rs.{" "}
+                    {finalizedInvoice.grossTotal?.toFixed(2)}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Discount:</strong> Rs.{" "}
+                    {finalizedInvoice.discount?.toFixed(2)}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Net Total:</strong> Rs.{" "}
+                    {finalizedInvoice.netTotal?.toFixed(2)}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Cash Paid:</strong> Rs.{" "}
+                    {finalizedInvoice.cashPaid?.toFixed(2)}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Balance:</strong> Rs.{" "}
+                    {finalizedInvoice.balance?.toFixed(2)}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ my: 2 }} />
+
+              <Typography variant="h6" gutterBottom>
+                Invoice Items
+              </Typography>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Medicine</TableCell>
+                      <TableCell>Price</TableCell>
+                      <TableCell>Qty</TableCell>
+                      <TableCell>Total</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {finalizedInvoice.invoiceMedicines?.map((item, i) => (
+                      <TableRow key={i}>
+                        <TableCell>
+                          {item.medicine?.name || "Unknown"}
+                        </TableCell>
+                        <TableCell>{item.salesPrice?.toFixed(2)}</TableCell>
+                        <TableCell>{item.qty}</TableCell>
+                        <TableCell>
+                          {(item.salesPrice * item.qty).toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+        </DialogContent>
+
+        <DialogActions sx={{ displayPrint: "none" }}>
+          <Button onClick={() => setPrintDialogOpen(false)}>Close</Button>
+          <Button
+            variant="contained"
+            startIcon={<Print />}
+            onClick={() => window.print()}
+          >
+            Print
           </Button>
         </DialogActions>
       </Dialog>

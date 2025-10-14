@@ -15,8 +15,9 @@ import {
   DialogContent,
   DialogActions,
   Alert,
-  Divider,
-  Chip
+  Chip,
+  Tabs,
+  Tab
 } from '@mui/material';
 import {
   Business,
@@ -24,10 +25,13 @@ import {
   PhotoCamera,
   Save,
   Cancel,
-  Upload
+  Upload,
+  Palette
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import api from '../utils/axiosConfig';
+import ThemeColorPicker from '../components/ThemeColorPicker';
+import { useLogo } from "../contexts/LogoContext";
 
 const Organization = () => {
   const [organization, setOrganization] = useState(null);
@@ -36,6 +40,9 @@ const Organization = () => {
   const [logoDialogOpen, setLogoDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const { setLogoUrl } = useLogo();
+
 
   const [formData, setFormData] = useState({
     orgTitle: '',
@@ -113,8 +120,7 @@ const Organization = () => {
       }
 
       setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      setPreviewUrl(URL.createObjectURL(file))
       setLogoDialogOpen(true);
     }
   };
@@ -134,6 +140,7 @@ const Organization = () => {
       });
 
       toast.success('Logo uploaded successfully');
+      setLogoUrl(previewUrl);
       setLogoDialogOpen(false);
       setSelectedFile(null);
       setPreviewUrl(null);
@@ -148,6 +155,7 @@ const Organization = () => {
   const handleLogoRemove = async () => {
     try {
       await api.delete('/organization/logo');
+      setLogoUrl(null);
       toast.success('Logo removed successfully');
       fetchOrganization();
     } catch (error) {
@@ -157,11 +165,27 @@ const Organization = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h5" gutterBottom>
         Organization Profile
       </Typography>
 
-      <Grid container spacing={3}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+          <Tab 
+            icon={<Business />} 
+            label="Organization Info" 
+            iconPosition="start"
+          />
+          <Tab 
+            icon={<Palette />} 
+            label="Theme Colors" 
+            iconPosition="start"
+          />
+        </Tabs>
+      </Box>
+
+      {activeTab === 0 && (
+        <Grid container spacing={3}>
         {/* Organization Info Card */}
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3 }}>
@@ -377,6 +401,15 @@ const Organization = () => {
           </Paper>
         </Grid>
       </Grid>
+      )}
+
+      {activeTab === 1 && (
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <ThemeColorPicker />
+          </Grid>
+        </Grid>
+      )}
 
       {/* Logo Preview Dialog */}
       <Dialog open={logoDialogOpen} onClose={() => setLogoDialogOpen(false)} maxWidth="sm" fullWidth>

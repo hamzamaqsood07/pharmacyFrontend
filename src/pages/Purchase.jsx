@@ -50,6 +50,17 @@ const Purchase = () => {
   const searchInputRef = useRef(null);
 
   useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key === "f") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
     fetchMedicines();
   }, []);
 
@@ -222,6 +233,8 @@ const Purchase = () => {
               onChange={(event, newValue) => {
                 if (newValue && typeof newValue === "object") {
                   handleMedicineSelect(newValue);
+                } else {
+                  setSelectedMedicine(null);
                 }
               }}
               onInputChange={(event, newInputValue) => {
@@ -293,7 +306,13 @@ const Purchase = () => {
                   handlePurchase(); // open confirm modal
                 }
               }}
+              onBlur={() => {
+                if (!packQuantity || packQuantity < 1) {
+                  setPackQuantity(1);
+                }
+              }}
               onChange={(e) => setPackQuantity(parseInt(e.target.value))}
+              onfocu
               inputProps={{ min: 1 }}
               fullWidth
               size="large"
@@ -305,7 +324,7 @@ const Purchase = () => {
               variant="contained"
               startIcon={<ShoppingCart />}
               onClick={handlePurchase}
-              disabled={!selectedMedicine || packQuantity <= 0}
+              disabled={!selectedMedicine || !packQuantity}
               fullWidth
               size="large"
               sx={{ height: "56px" }}
@@ -324,12 +343,12 @@ const Purchase = () => {
                 <br />
                 Pack Size: {selectedMedicine.packSize} units per pack
                 <br />
-                Adding {packQuantity} pack(s) ={" "}
-                {selectedMedicine.packSize * packQuantity} units
+                Adding {packQuantity | 0} pack(s) ={" "}
+                {selectedMedicine.packSize * packQuantity | 0} units
                 <br />
                 New Stock:{" "}
                 {selectedMedicine.qty +
-                  selectedMedicine.packSize * packQuantity}{" "}
+                  selectedMedicine.packSize * packQuantity | 0}{" "}
                 units
               </Typography>
             </Alert>
@@ -412,7 +431,7 @@ const Purchase = () => {
         fullWidth
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            confirmPurchase(); // open confirm modal
+            confirmPurchase();
           }
         }}
       >

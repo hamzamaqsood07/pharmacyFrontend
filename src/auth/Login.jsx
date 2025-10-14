@@ -13,7 +13,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function Login() {
-  const [showPassword, setShowPassword] = React.useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -36,28 +36,20 @@ export default function Login() {
   const onSubmit = async (data) => {
     setError("");
     try {
-      console.log("Attempting login with:", data);
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/login`, data);
       
-      console.log("Login response:", response);
-      console.log("Response status:", response.status);
-      console.log("Response data:", response.data);
-      console.log("Response headers:", response.headers);
       
       // Try to get token from response body first, then from headers
       const token = response.data.token || response.headers.authorization?.replace('Bearer ', '');
       
-      console.log("Extracted token:", token);
       
       if (token) {
         localStorage.setItem('token', token);
-        console.log("Token stored in localStorage");
         navigate("/");
       } else {
         setError("Login failed - no token received");
       }
     } catch (err) {
-      console.error("Login error:", err);
       setError(err?.response?.data?.message || "Login failed");
     }
   };
@@ -98,14 +90,6 @@ export default function Login() {
               <OutlinedInput
                 {...register("password", {
                   required: { value: true, message: "Password is required" },
-                  minLength: {
-                    value: 8,
-                    message: "Password must have atleast 8 characters",
-                  },
-                  maxLength: {
-                    value: 64,
-                    message: "Password must not be above 64 characters",
-                  },
                 })}
                 sx={{ marginBottom: "17px" }}
                 id="outlined-adornment-password"
