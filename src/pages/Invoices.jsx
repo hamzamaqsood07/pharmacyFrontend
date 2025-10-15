@@ -218,7 +218,7 @@ const Invoices = () => {
                 <TableRow key={invoice.id}>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium">
-                      {invoice.id.substring(0, 8)}...
+                      #INV-{String(invoice.invoiceNumber).padStart(6, '0')}
                     </Typography>
                   </TableCell>
                   <TableCell>
