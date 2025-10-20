@@ -1,11 +1,11 @@
-import {  useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   createTheme,
   ThemeProvider as MuiThemeProvider,
 } from "@mui/material/styles";
 import api from "../utils/axiosConfig";
 import { ThemeContext } from "../contexts/ThemeContext";
-
+import { Box, CircularProgress, Typography } from "@mui/material";
 
 export const ThemeProvider = ({ children }) => {
   const [themeColors, setThemeColors] = useState({
@@ -19,7 +19,7 @@ export const ThemeProvider = ({ children }) => {
     if (token) {
       fetchThemeColors();
     } else {
-      setLoading(false); 
+      setLoading(false);
     }
   }, []);
 
@@ -125,7 +125,32 @@ export const ThemeProvider = ({ children }) => {
   };
 
   if (loading) {
-    return <div>Loading theme...</div>;
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          background: "linear-gradient(135deg, #1976d2 30%, #42a5f5 90%)",
+          color: "#fff",
+          textAlign: "center",
+        }}
+      >
+        <CircularProgress
+          size={70}
+          thickness={5}
+          sx={{ color: "#fff", mb: 3 }}
+        />
+        <Typography variant="h5" fontWeight="bold" letterSpacing={1}>
+          Loading your theme...
+        </Typography>
+        <Typography variant="body1" sx={{ opacity: 0.8, mt: 1 }}>
+          Please wait while we prepare your dashboard
+        </Typography>
+      </Box>
+    );
   }
 
   return (
