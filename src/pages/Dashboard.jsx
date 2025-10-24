@@ -513,6 +513,7 @@ const Dashboard = () => {
                   <TableCell>Medicine</TableCell>
                   <TableCell>Price</TableCell>
                   <TableCell>Discount (%)</TableCell>
+                  <TableCell>Price after Discount</TableCell>
                   <TableCell>Quantity</TableCell>
                   <TableCell>Total</TableCell>
                   <TableCell>Actions</TableCell>
@@ -524,11 +525,18 @@ const Dashboard = () => {
                   const discountAmt =
                     ((Number(item.medDiscount) || 0) / 100) * medTotal;
                   const medicineNetTotal = medTotal - discountAmt;
+
+                  const priceAfterDiscount =
+                    Number(item.salesPrice || 0) -
+                    (Number(item.salesPrice || 0) *
+                      Number(item.medDiscount || 0)) /
+                      100;
                   return (
                     <TableRow key={item.medicineId}>
                       <TableCell>{item.medicine?.name}</TableCell>
                       <TableCell> {item.salesPrice.toFixed(2)}</TableCell>
                       <TableCell> {item.medDiscount.toFixed(2)}</TableCell>
+                      <TableCell> {priceAfterDiscount.toFixed(2)}</TableCell>
                       <TableCell>
                         <TextField
                           type="number"
@@ -726,9 +734,6 @@ const Dashboard = () => {
                   <Typography variant="body2">
                     <strong>Date:</strong>{" "}
                     {new Date(finalizedInvoice.createdAt).toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Status:</strong> {finalizedInvoice.status}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Cashier:</strong>{" "}
