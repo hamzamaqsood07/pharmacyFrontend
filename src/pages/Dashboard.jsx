@@ -780,6 +780,7 @@ const Dashboard = () => {
                       <TableCell>Medicine</TableCell>
                       <TableCell>Price</TableCell>
                       <TableCell>Discount (%)</TableCell>
+                      <TableCell>Price after Discount</TableCell>
                       <TableCell>Qty</TableCell>
                       <TableCell>Total</TableCell>
                     </TableRow>
@@ -791,6 +792,12 @@ const Dashboard = () => {
                       const discountAmt =
                         ((Number(item.medDiscount) || 0) / 100) * medTotal;
                       const medicineNetTotal = medTotal - discountAmt;
+
+                      const priceAfterDiscount =
+                        Number(item.salesPrice || 0) -
+                        (Number(item.salesPrice || 0) *
+                          Number(item.medDiscount || 0)) /
+                          100;
                       return (
                         <TableRow key={i}>
                           <TableCell>
@@ -798,6 +805,7 @@ const Dashboard = () => {
                           </TableCell>
                           <TableCell>{item.salesPrice?.toFixed(2)}</TableCell>
                           <TableCell>{item.medDiscount?.toFixed(2)}</TableCell>
+                          <TableCell>{priceAfterDiscount.toFixed(2)}</TableCell>
                           <TableCell>{item.qty}</TableCell>
                           <TableCell>{medicineNetTotal.toFixed(2)}</TableCell>
                         </TableRow>

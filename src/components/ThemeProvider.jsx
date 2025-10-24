@@ -26,7 +26,6 @@ export const ThemeProvider = ({ children }) => {
   const fetchThemeColors = async () => {
     try {
       const response = await api.get("/organization");
-      console.log(response.data);
       if (response.data) {
         const colors = {
           primaryColor: response.data.primaryColor || "#1976d2",
@@ -34,7 +33,6 @@ export const ThemeProvider = ({ children }) => {
         };
         setThemeColors(colors);
         localStorage.setItem("themeColors", JSON.stringify(colors));
-        console.log("object");
       }
     } catch (error) {
       console.error("Error fetching theme colors:", error);

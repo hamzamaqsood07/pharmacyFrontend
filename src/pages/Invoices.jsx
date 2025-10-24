@@ -371,42 +371,59 @@ const Invoices = () => {
                         <TableCell>Medicine</TableCell>
                         <TableCell>Price</TableCell>
                         <TableCell>Discount %</TableCell>
+                        <TableCell>Price after Discount</TableCell>
                         <TableCell>Quantity</TableCell>
                         <TableCell>Total</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {selectedInvoice.invoiceMedicines.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="medium">
-                              {item.medicine?.name || "Unknown Medicine"}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {item.salesPrice?.toFixed(2) || "0.00"}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {item.medDiscount?.toFixed(2) || "0.00"}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">{item.qty}</Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="medium">
-                              {(
-                                (item.salesPrice || 0) *
-                                (item.qty || 0) *
-                                (1 - (item.medDiscount || 0) / 100)
-                              ).toFixed(2)}
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {selectedInvoice.invoiceMedicines.map((item, index) => {
+                        const priceAfterDiscount =
+                          Number(item.salesPrice || 0) -
+                          (Number(item.salesPrice || 0) *
+                            Number(item.medDiscount || 0)) /
+                            100;
+
+                        // 🧮 calculate total
+                        const total = priceAfterDiscount * Number(item.qty || 0);
+                         
+                        return (
+                          <TableRow key={index}>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight="medium">
+                                {item.medicine?.name || "Unknown Medicine"}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {item.salesPrice?.toFixed(2) || "0.00"}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {item.medDiscount?.toFixed(2) || "0.00"}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {priceAfterDiscount.toFixed(2) || "0.00"}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {item.qty}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight="medium">
+                                {
+                                  total.toFixed(2)
+                                }
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </TableContainer>

@@ -147,7 +147,7 @@ const Layout = ({ children }) => {
 
         <Divider sx={{ mb: 2 }} />
 
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        <ul className="sidebarList">
           <li>
             <NavLink to="/" className="sidebarLink">
               <DashboardIcon sx={{ mr: 1, fontSize: 20 }} /> Dashboard
