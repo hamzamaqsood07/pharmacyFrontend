@@ -34,7 +34,7 @@ const Invoices = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const searchRef = useRef(null)
+  const searchRef = useRef(null);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -218,7 +218,7 @@ const Invoices = () => {
                 <TableRow key={invoice.id}>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium">
-                      #INV-{String(invoice.invoiceNumber).padStart(6, '0')}
+                      #INV-{String(invoice.invoiceNumber).padStart(6, "0")}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -289,7 +289,7 @@ const Invoices = () => {
           Invoice Details
           {selectedInvoice && (
             <Typography variant="body2" color="text.secondary">
-              ID: #INV-{String(selectedInvoice.invoiceNumber).padStart(6, '0')}
+              ID: #INV-{String(selectedInvoice.invoiceNumber).padStart(6, "0")}
             </Typography>
           )}
         </DialogTitle>
@@ -322,9 +322,9 @@ const Invoices = () => {
 
                   {selectedInvoice.customer && (
                     <Typography variant="body2">
-                    <strong>Customer:</strong>{" "}
-                    {selectedInvoice.customer || "N/A"}
-                  </Typography>
+                      <strong>Customer:</strong>{" "}
+                      {selectedInvoice.customer || "N/A"}
+                    </Typography>
                   )}
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -341,19 +341,18 @@ const Invoices = () => {
                   </Typography>
                   <Typography variant="body2">
                     <strong>Net Total:</strong> Rs.{" "}
-                    {selectedInvoice.netTotal?.toFixed(2) }
+                    {selectedInvoice.netTotal?.toFixed(2)}
                   </Typography>
-                  
-                    <Typography variant="body2">
-                      <strong>Cash Paid:</strong> Rs.{" "}
-                      {selectedInvoice.cashPaid?.toFixed(2)}
-                    </Typography>
-                  
-                    <Typography variant="body2">
-                      <strong>Balance:</strong> Rs.{" "}
-                      {selectedInvoice.balance?.toFixed(2)}
-                    </Typography>
-                  
+
+                  <Typography variant="body2">
+                    <strong>Cash Paid:</strong> Rs.{" "}
+                    {selectedInvoice.cashPaid?.toFixed(2)}
+                  </Typography>
+
+                  <Typography variant="body2">
+                    <strong>Balance:</strong> Rs.{" "}
+                    {selectedInvoice.balance?.toFixed(2)}
+                  </Typography>
                 </Grid>
               </Grid>
 
@@ -371,35 +370,60 @@ const Invoices = () => {
                       <TableRow>
                         <TableCell>Medicine</TableCell>
                         <TableCell>Price</TableCell>
+                        <TableCell>Discount %</TableCell>
+                        <TableCell>Price after Discount</TableCell>
                         <TableCell>Quantity</TableCell>
                         <TableCell>Total</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {selectedInvoice.invoiceMedicines.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="medium">
-                              {item.medicine?.name || "Unknown Medicine"}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {item.salesPrice?.toFixed(2) || "0.00"}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">{item.qty}</Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="medium">
-                              {(
-                                (item.salesPrice || 0) * (item.qty || 0)
-                              ).toFixed(2)}
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {selectedInvoice.invoiceMedicines.map((item, index) => {
+                        const priceAfterDiscount =
+                          Number(item.salesPrice || 0) -
+                          (Number(item.salesPrice || 0) *
+                            Number(item.medDiscount || 0)) /
+                            100;
+
+                        // 🧮 calculate total
+                        const total = priceAfterDiscount * Number(item.qty || 0);
+                         
+                        return (
+                          <TableRow key={index}>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight="medium">
+                                {item.medicine?.name || "Unknown Medicine"}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {item.salesPrice?.toFixed(2) || "0.00"}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {item.medDiscount?.toFixed(2) || "0.00"}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {priceAfterDiscount.toFixed(2) || "0.00"}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {item.qty}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight="medium">
+                                {
+                                  total.toFixed(2)
+                                }
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </TableContainer>

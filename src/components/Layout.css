@@ -1,3 +1,9 @@
+.sidebarList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
 .sidebarLink {
   display: flex;
   padding: 20px 15px;
@@ -19,5 +25,5 @@
   background-color: var(--primary-color, #0d6efd);
   color: white;
   font-weight: 600;
-  box-shadow: 0 2px 8px var(--primary-color, #0d6efd)40;
+  box-shadow: 0 2px 8px var(--primary-color, #0d6efd) 40;
 }

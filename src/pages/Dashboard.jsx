@@ -51,12 +51,15 @@ const Dashboard = () => {
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [finalizedInvoice, setFinalizedInvoice] = useState(null);
-  const { themeColors } =  useContext(ThemeContext);
+  const [perMedicineDiscount, setPerMedicineDiscount] = useState(0);
+
+  const { themeColors } = useContext(ThemeContext);
 
   const searchInputRef = useRef(null); // Ref for the search input field
   const quantityRef = useRef(null); // Ref for the quantity input field
   const discountRef = useRef(null); // Ref for the discount in dialog box
   const cashPaidRef = useRef(null); // Ref for the cash paid in dialog box
+  const perMedRef = useRef(null); // Ref for per medicine discount input field
 
   useEffect(() => {
     if (finalizeDialogOpen) {
@@ -122,14 +125,16 @@ const Dashboard = () => {
 
     try {
       setLoading(true);
-      await api.post("/invoice/add-item", {
+      const response = await api.post("/invoice/add-item", {
         medicineId: selectedMedicine.id,
         qty: quantity,
+        medDiscount: perMedicineDiscount || 0,
       });
-
-      toast.success("Medicine added to invoice");
+      const successMesssage = response.data.message;
+      toast.success(successMesssage);
       setSelectedMedicine(null);
       setQuantity(1);
+      setPerMedicineDiscount(0);
       setSearchTerm("");
       setFilteredMedicines([]);
       setTimeout(() => {
@@ -143,6 +148,13 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const changeFocusToDiscount = () => {
+    setTimeout(() => {
+      perMedRef.current?.focus();
+      perMedRef.current?.select();
+    }, 100);
   };
 
   const handleRemoveFromInvoice = async (medicineId) => {
@@ -299,13 +311,21 @@ const Dashboard = () => {
       </Box>
 
       {/* Medicine Search and Add Section */}
-      <Paper sx={{ 
-        p: 3, 
-        mb: 3,
-        background: `linear-gradient(135deg, ${themeColors?.primaryColor || '#1976d2'}05 0%, ${themeColors?.secondaryColor || '#dc004e'}05 100%)`,
-        border: `1px solid ${themeColors?.primaryColor || '#1976d2'}20`
-      }}>
-        <Typography variant="h6" gutterBottom sx={{ color: themeColors?.primaryColor }}>
+      <Paper
+        sx={{
+          p: 3,
+          mb: 3,
+          background: `linear-gradient(135deg, ${
+            themeColors?.primaryColor || "#1976d2"
+          }05 0%, ${themeColors?.secondaryColor || "#dc004e"}05 100%)`,
+          border: `1px solid ${themeColors?.primaryColor || "#1976d2"}20`,
+        }}
+      >
+        <Typography
+          variant="h6"
+          gutterBottom
+          sx={{ color: themeColors?.primaryColor }}
+        >
           Add Medicine to Invoice
         </Typography>
 
@@ -386,10 +406,38 @@ const Dashboard = () => {
               type="number"
               value={quantity}
               onChange={(e) => setQuantity(parseInt(e.target.value))}
-              inputProps={{ min: 1 }}
+              slotProps={{
+                input: {
+                  inputProps: { min: 1 },
+                },
+              }}
               fullWidth
               size="large"
               inputRef={quantityRef}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && selectedMedicine && quantity > 0) {
+                  changeFocusToDiscount();
+                }
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={6} sm={6} md={2}>
+            <TextField
+              label="Discount Per Medicine (%)"
+              type="number"
+              value={perMedicineDiscount}
+              inputRef={perMedRef}
+              onChange={(e) =>
+                setPerMedicineDiscount(parseFloat(e.target.value))
+              }
+              slotProps={{
+                input: {
+                  inputProps: { min: 0, max: 100 },
+                },
+              }}
+              fullWidth
+              size="large"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && selectedMedicine && quantity > 0) {
                   handleAddToInvoice();
@@ -464,50 +512,60 @@ const Dashboard = () => {
                 <TableRow>
                   <TableCell>Medicine</TableCell>
                   <TableCell>Price</TableCell>
+                  <TableCell>Discount (%)</TableCell>
                   <TableCell>Quantity</TableCell>
                   <TableCell>Total</TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {currentInvoice.invoiceMedicines?.map((item) => (
-                  <TableRow key={item.medicineId}>
-                    <TableCell>{item.medicine?.name}</TableCell>
-                    <TableCell> {item.salesPrice.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Box display="flex" alignItems="center">
-                        <IconButton
+                {currentInvoice.invoiceMedicines?.map((item) => {
+                  const medTotal = Number(item.salesPrice) * Number(item.qty);
+                  const discountAmt =
+                    ((Number(item.medDiscount) || 0) / 100) * medTotal;
+                  const medicineNetTotal = medTotal - discountAmt;
+                  return (
+                    <TableRow key={item.medicineId}>
+                      <TableCell>{item.medicine?.name}</TableCell>
+                      <TableCell> {item.salesPrice.toFixed(2)}</TableCell>
+                      <TableCell> {item.medDiscount.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <TextField
+                          type="number"
+                          value={item.qty}
+                          onChange={(e) => {
+                            const newQty = parseInt(e.target.value);
+                            if (!isNaN(newQty)) {
+                              handleUpdateQuantity(item.medicineId, newQty);
+                            }
+                          }}
+                          variant="outlined"
                           size="small"
+                          slotProps={{
+                            input: {
+                              inputProps: {
+                                min: 1,
+                                style: { textAlign: "center", width: "70px" },
+                              },
+                            },
+                          }}
+                        />
+                      </TableCell>
+
+                      <TableCell>{medicineNetTotal.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <IconButton
+                          color="error"
                           onClick={() =>
-                            handleUpdateQuantity(item.medicineId, item.qty - 1)
+                            handleRemoveFromInvoice(item.medicineId)
                           }
                         >
-                          <Remove />
+                          <Delete />
                         </IconButton>
-                        <Typography sx={{ mx: 1 }}>{item.qty}</Typography>
-                        <IconButton
-                          size="small"
-                          onClick={() =>
-                            handleUpdateQuantity(item.medicineId, item.qty + 1)
-                          }
-                        >
-                          <Add />
-                        </IconButton>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      {(item.salesPrice * item.qty).toFixed(2)}
-                    </TableCell>
-                    <TableCell>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleRemoveFromInvoice(item.medicineId)}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
@@ -652,7 +710,7 @@ const Dashboard = () => {
           Invoice Details
           {finalizedInvoice && (
             <Typography variant="body2" color="text.secondary">
-              ID: #INV-{String(finalizedInvoice.invoiceNumber).padStart(6, '0')}
+              ID: #INV-{String(finalizedInvoice.invoiceNumber).padStart(6, "0")}
             </Typography>
           )}
         </DialogTitle>
@@ -721,23 +779,38 @@ const Dashboard = () => {
                     <TableRow>
                       <TableCell>Medicine</TableCell>
                       <TableCell>Price</TableCell>
+                      <TableCell>Discount (%)</TableCell>
+                      <TableCell>Price after Discount</TableCell>
                       <TableCell>Qty</TableCell>
                       <TableCell>Total</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {finalizedInvoice.invoiceMedicines?.map((item, i) => (
-                      <TableRow key={i}>
-                        <TableCell>
-                          {item.medicine?.name || "Unknown"}
-                        </TableCell>
-                        <TableCell>{item.salesPrice?.toFixed(2)}</TableCell>
-                        <TableCell>{item.qty}</TableCell>
-                        <TableCell>
-                          {(item.salesPrice * item.qty).toFixed(2)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {finalizedInvoice.invoiceMedicines?.map((item, i) => {
+                      const medTotal =
+                        Number(item.salesPrice) * Number(item.qty);
+                      const discountAmt =
+                        ((Number(item.medDiscount) || 0) / 100) * medTotal;
+                      const medicineNetTotal = medTotal - discountAmt;
+
+                      const priceAfterDiscount =
+                        Number(item.salesPrice || 0) -
+                        (Number(item.salesPrice || 0) *
+                          Number(item.medDiscount || 0)) /
+                          100;
+                      return (
+                        <TableRow key={i}>
+                          <TableCell>
+                            {item.medicine?.name || "Unknown"}
+                          </TableCell>
+                          <TableCell>{item.salesPrice?.toFixed(2)}</TableCell>
+                          <TableCell>{item.medDiscount?.toFixed(2)}</TableCell>
+                          <TableCell>{priceAfterDiscount.toFixed(2)}</TableCell>
+                          <TableCell>{item.qty}</TableCell>
+                          <TableCell>{medicineNetTotal.toFixed(2)}</TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>

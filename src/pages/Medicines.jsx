@@ -435,6 +435,7 @@ const Medicines = () => {
                 <Grid item xs={12} sm={6}>
                   <TextField
                     label="Initial Stock"
+                    placeholder="No of packs to add"
                     type="number"
                     value={formData.qty}
                     onChange={(e) =>
