@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   Paper,
@@ -31,7 +31,6 @@ import {
   MoreVert,
   LocalPharmacy,
   Inventory,
-  AttachMoney,
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import api from "../utils/axiosConfig";
@@ -54,18 +53,18 @@ const Medicines = () => {
     qty: "",
   });
 
-  const searchRef = useRef(null)
+  const searchRef = useRef(null);
 
   useEffect(() => {
-      const handleKeyDown = (e) => {
-        if (e.ctrlKey && e.key === "f") {
-          e.preventDefault();
-          searchRef.current?.focus();
-        }
-      };
-      document.addEventListener("keydown", handleKeyDown);
-      return () => document.removeEventListener("keydown", handleKeyDown);
-    }, []);
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key === "f") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     fetchMedicines();
@@ -133,8 +132,7 @@ const Medicines = () => {
       !formData.name ||
       !formData.salesPrice ||
       !formData.purchasePrice ||
-      !formData.packSize ||
-      !formData.qty
+      !formData.packSize 
     ) {
       toast.error("Please fill in all fields");
       return;
@@ -146,17 +144,16 @@ const Medicines = () => {
         name: formData.name,
         salesPrice: parseFloat(formData.salesPrice),
         purchasePrice: parseFloat(formData.purchasePrice),
-        packSize: parseInt(formData.packSize)
+        packSize: parseInt(formData.packSize),
       };
-
 
       if (editingMedicine) {
         await api.put(`/medicine/${editingMedicine.id}`, data);
         toast.success("Medicine updated successfully");
       } else {
-        data.qty = parseInt(formData.qty);
-        await api.post("/medicine", data);
-        toast.success("Medicine added successfully");
+        const response = await api.post("/medicine", data);
+        const {message} = await response.data
+        toast.success(message);
       }
 
       handleCloseDialog();
@@ -266,12 +263,14 @@ const Medicines = () => {
           value={searchTerm}
           inputRef={searchRef}
           onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
+            },
           }}
           fullWidth
           sx={{ mb: 2 }}
@@ -400,7 +399,11 @@ const Medicines = () => {
                   }
                   fullWidth
                   required
-                  inputProps={{ min: 0, step: 0.01 }}
+                  slotProps={{
+                    input: {
+                      inputProps: { min: 0, step: 0.01 },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -413,7 +416,11 @@ const Medicines = () => {
                   }
                   fullWidth
                   required
-                  inputProps={{ min: 0, step: 0.01 }}
+                  slotProps={{
+                    input: {
+                      inputProps: { min: 0, step: 0.01 },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -426,27 +433,14 @@ const Medicines = () => {
                   }
                   fullWidth
                   required
-                  inputProps={{ min: 1 }}
+                  slotProps={{
+                    input: {
+                      inputProps: { min: 1 },
+                    },
+                  }}
                 />
               </Grid>
 
-              {/* Only show Initial Stock when adding a new medicine */}
-              {!editingMedicine && (
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Initial Stock"
-                    placeholder="No of packs to add"
-                    type="number"
-                    value={formData.qty}
-                    onChange={(e) =>
-                      setFormData({ ...formData, qty: e.target.value })
-                    }
-                    fullWidth
-                    required
-                    inputProps={{ min: 0 }}
-                  />
-                </Grid>
-              )}
             </Grid>
           </DialogContent>
           <DialogActions>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import {
   AppBar,
   Toolbar,
@@ -10,51 +10,34 @@ import {
   MenuItem,
   ListItemIcon,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 import { Logout, Person } from "@mui/icons-material";
 import { NavLink, useNavigate } from "react-router-dom";
-import api from "../utils/axiosConfig";
 import "./Layout.css";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import MedicationIcon from "@mui/icons-material/Medication";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import ReceiptIcon from "@mui/icons-material/Receipt";
 import BusinessIcon from "@mui/icons-material/Business";
-import { useLogo } from "../contexts/LogoContext";
+import ReceiptIcon from "@mui/icons-material/Receipt";
 import { ThemeContext } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useLogo } from "../contexts/LogoContext";
 
 
 
 const Layout = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [organization, setOrganization] = useState(null);
+  const { user, organization, loading } = useAuth(); // Get data from Context
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
   const { themeColors } = useContext(ThemeContext);
-  const { logoUrl, setLogoUrl } = useLogo();
-
+  const {logoUrl,setLogoUrl} = useLogo()
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/login");
-          return;
-        }
-        const response = await api.get("/auth/me");
-        setUser(response.data.user);
-        setOrganization(response.data.organization);
-        setLogoUrl(response.data.organization.logoUrl);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        localStorage.removeItem("token");
-        navigate("/login");
-      }
-    };
-    fetchUserData();
-  }, [navigate]);
-
+    if (organization?.logoUrl && !logoUrl) {
+      setLogoUrl(organization.logoUrl);
+    }
+  }, [organization, logoUrl, setLogoUrl]);
   // Update CSS custom properties when theme colors change
   useEffect(() => {
     if (themeColors) {
@@ -79,8 +62,27 @@ const Layout = ({ children }) => {
     }
   }, [themeColors]);
 
+  if (loading) {
+     return (
+          <Box 
+            display="flex" 
+            justifyContent="center" 
+            alignItems="center" 
+            minHeight="100vh"
+          >
+            <CircularProgress />
+          </Box>
+        );
+  }
+
+  if (!user && !loading) {
+    navigate("/login");
+    return null;
+  }
+
   const handleProfileMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleProfileMenuClose = () => setAnchorEl(null);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");

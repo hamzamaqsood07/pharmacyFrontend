@@ -26,16 +26,17 @@ import {
 } from "@mui/material";
 import {
   Add,
-  Remove,
   Delete,
   Search,
   Receipt,
   Print,
   Percent,
 } from "@mui/icons-material";
+import "./Dashboard.css"
 import { toast } from "react-toastify";
 import api from "../utils/axiosConfig";
 import { ThemeContext } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
 
 const Dashboard = () => {
   const [medicines, setMedicines] = useState([]);
@@ -52,6 +53,7 @@ const Dashboard = () => {
   const [customerName, setCustomerName] = useState("");
   const [finalizedInvoice, setFinalizedInvoice] = useState(null);
   const [perMedicineDiscount, setPerMedicineDiscount] = useState(0);
+  const {organization} = useAuth();
 
   const { themeColors } = useContext(ThemeContext);
 
@@ -121,7 +123,7 @@ const Dashboard = () => {
   };
 
   const handleAddToInvoice = async () => {
-    if (!selectedMedicine || quantity <= 0) return;
+    if (!selectedMedicine.qty ) return toast.error(selectedMedicine.name+" is out of stock")
 
     try {
       setLoading(true);
@@ -199,6 +201,7 @@ const Dashboard = () => {
       });
       const { message } = response.data;
       toast.success(message);
+      fetchMedicines()
       setFinalizeDialogOpen(false);
       setCurrentInvoice(null);
       setDiscountPercentage(0);
@@ -266,8 +269,9 @@ const Dashboard = () => {
         discountedPercentage: discountPercentage,
         customerName: customerName || "",
       });
-
+      
       const { updatedInvoice } = response.data;
+      fetchMedicines()
       setFinalizedInvoice(updatedInvoice);
       setCurrentInvoice(null);
       setFinalizeDialogOpen(false);
@@ -338,7 +342,7 @@ const Dashboard = () => {
               getOptionLabel={(option) => option.name || ""}
               value={selectedMedicine || ""}
               onChange={(event, newValue) => {
-                if (newValue && typeof newValue === "object") {
+                if(newValue){
                   handleMedicineSelect(newValue);
                 }
               }}
@@ -674,7 +678,7 @@ const Dashboard = () => {
             />
 
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Net Total: Rs. {netTotal.toFixed(2)}
+              Net Total:  {netTotal.toFixed(2)}
             </Typography>
             {cashPaid > 0 && (
               <Typography
@@ -711,75 +715,63 @@ const Dashboard = () => {
       <Dialog
         open={printDialogOpen}
         onClose={() => setPrintDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
+        scroll="paper"
       >
-        <DialogTitle>
-          Invoice Details
+
+        <DialogContent id="print-section" style={{width:"80mm"}}>
           {finalizedInvoice && (
-            <Typography variant="body2" color="text.secondary">
-              ID: #INV-{String(finalizedInvoice.invoiceNumber).padStart(6, "0")}
-            </Typography>
-          )}
-        </DialogTitle>
-
-        <DialogContent id="print-section">
-          {finalizedInvoice && (
-            <Box>
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="h6" gutterBottom>
-                    Invoice Info
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Date:</strong>{" "}
-                    {new Date(finalizedInvoice.createdAt).toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Cashier:</strong>{" "}
-                    {finalizedInvoice.user?.firstName || "N/A"}
-                  </Typography>
-                  {finalizedInvoice.customer && (
-                    <Typography variant="body2">
-                      <strong>Customer:</strong>{" "}
-                      {finalizedInvoice.customer || "N/A"}
-                    </Typography>
-                  )}
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="h6" gutterBottom>
-                    Financial Summary
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Gross Total:</strong> Rs.{" "}
-                    {finalizedInvoice.grossTotal?.toFixed(2)}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Discount:</strong> Rs.{" "}
-                    {finalizedInvoice.discount?.toFixed(2)}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Net Total:</strong> Rs.{" "}
-                    {finalizedInvoice.netTotal?.toFixed(2)}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Cash Paid:</strong> Rs.{" "}
-                    {finalizedInvoice.cashPaid?.toFixed(2)}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Balance:</strong> Rs.{" "}
-                    {finalizedInvoice.balance?.toFixed(2)}
-                  </Typography>
-                </Grid>
-              </Grid>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Typography variant="h6" gutterBottom>
-                Invoice Items
+            <Box
+              sx={{
+                textAlign: "center",
+                p: 1,
+              }}
+            >
+              <Typography variant="h5" fontWeight="bold" gutterBottom>
+                {organization?.orgTitle || "Pharmacy Name"}
               </Typography>
-              <TableContainer>
-                <Table size="small">
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                {organization?.address || "Pharmacy Address"}
+                <br />
+                {organization?.phone || "Contact Info"}
+              </Typography>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                sx={{ fontSize: "12px", mb: 1 }}
+              >
+                <Typography variant="caption">
+                  Inv #: {String(finalizedInvoice.invoiceNumber).padStart(6, "0")}
+                </Typography>
+                <Typography variant="caption">
+                  {new Date(finalizedInvoice.createdAt).toLocaleString()}
+                </Typography>
+              </Box>
+
+              <Box display="flex" justifyContent="space-between" sx={{ mb: 1 }}>
+                <Typography variant="caption">
+                  Cashier: {finalizedInvoice.user?.firstName || "N/A"}
+                </Typography>
+
+                <Typography variant="caption">
+                    Customer: {finalizedInvoice.customer || "N/A"}
+                </Typography>
+              </Box>
+
+              <Box display="flex" justifyContent="space-between" sx={{ mb: 1 }}>
+
+                <Typography variant="caption">
+                    License No: {organization.licenseNo || "N/A"}
+                </Typography>
+
+                <Typography variant="caption">
+                    NTN No: {organization.ntnNo || "N/A"}
+                </Typography>
+              </Box>
+
+              <Divider sx={{ border:"1px dashed black"}}/>
+
+              {/* Items Table - Simplified for Receipt */}
+              <Table size="small" sx={{ "& td, & th": { padding: "4px 0", fontSize: "12px" } }}>
                   <TableHead>
                     <TableRow>
                       <TableCell>Medicine</TableCell>
@@ -805,7 +797,7 @@ const Dashboard = () => {
                           100;
                       return (
                         <TableRow key={i}>
-                          <TableCell>
+                          <TableCell style={{}}>
                             {item.medicine?.name || "Unknown"}
                           </TableCell>
                           <TableCell>{item.salesPrice?.toFixed(2)}</TableCell>
@@ -817,13 +809,66 @@ const Dashboard = () => {
                       );
                     })}
                   </TableBody>
-                </Table>
-              </TableContainer>
+              </Table>
+
+              <Divider sx={{ border:"1px dashed black",my:2}}/>
+
+              {/* Totals Section */}
+              <Box display="flex" justifyContent="space-between" mb={0.5}>
+                <Typography variant="body2">Gross Total:</Typography>
+                <Typography variant="body2">
+                  {finalizedInvoice.grossTotal?.toFixed(2)}
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="space-between" mb={0.5}>
+                <Typography variant="body2">Discount:</Typography>
+                <Typography variant="body2">
+                  -{finalizedInvoice.discount?.toFixed(2)}
+                </Typography>
+              </Box>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                mb={1}
+                sx={{ fontWeight: "bold" }}
+              >
+                <Typography variant="subtitle2">NET TOTAL:</Typography>
+                <Typography variant="subtitle2">
+                  {finalizedInvoice.netTotal?.toFixed(2)}
+                </Typography>
+              </Box>
+
+              <Box display="flex" justifyContent="space-between" mb={0.5}>
+                <Typography variant="body2">Cash Paid:</Typography>
+                <Typography variant="body2">
+                  {finalizedInvoice.cashPaid?.toFixed(2)}
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="space-between">
+                <Typography variant="body2">Change:</Typography>
+                <Typography variant="body2">
+                  {finalizedInvoice.balance?.toFixed(2)}
+                </Typography>
+              </Box>
+
+             <Divider sx={{ border:"1px dashed black",my:2}}/>
+              <Typography variant="caption" display="block" align="start">
+                Thank you for your purchase!
+              </Typography>
+              <Typography variant="caption" display="block" align="start">
+                Loose and Fridge Items are not refundable
+              </Typography>
+              <Typography variant="caption" display="block" align="start">
+                Return Will Be Accepted Within 7 Days with Original Receipt
+              </Typography>
+              <Typography variant="caption" display="block" align="start">
+                Software by Agile Pharmacy
+              </Typography>
             </Box>
           )}
         </DialogContent>
 
-        <DialogActions sx={{ displayPrint: "none" }}>
+        <DialogActions className="no-print">
           <Button onClick={() => setPrintDialogOpen(false)}>Close</Button>
           <Button
             variant="contained"

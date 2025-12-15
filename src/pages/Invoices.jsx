@@ -188,12 +188,14 @@ const Invoices = () => {
           value={searchTerm}
           inputRef={searchRef}
           onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
+            },
           }}
           fullWidth
           sx={{ mb: 2 }}
@@ -385,8 +387,9 @@ const Invoices = () => {
                             100;
 
                         // 🧮 calculate total
-                        const total = priceAfterDiscount * Number(item.qty || 0);
-                         
+                        const total =
+                          priceAfterDiscount * Number(item.qty || 0);
+
                         return (
                           <TableRow key={index}>
                             <TableCell>
@@ -416,9 +419,7 @@ const Invoices = () => {
                             </TableCell>
                             <TableCell>
                               <Typography variant="body2" fontWeight="medium">
-                                {
-                                  total.toFixed(2)
-                                }
+                                {total.toFixed(2)}
                               </Typography>
                             </TableCell>
                           </TableRow>

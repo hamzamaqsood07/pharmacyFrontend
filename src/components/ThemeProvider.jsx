@@ -6,44 +6,23 @@ import {
 import api from "../utils/axiosConfig";
 import { ThemeContext } from "../contexts/ThemeContext";
 import { Box, CircularProgress, Typography } from "@mui/material";
+import { useAuth } from "../contexts/AuthContext";
 
 export const ThemeProvider = ({ children }) => {
+  const {organization,loading: authLoading} = useAuth();
   const [themeColors, setThemeColors] = useState({
     primaryColor: "#1976d2",
     secondaryColor: "#dc004e",
   });
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetchThemeColors();
-    } else {
-      setLoading(false);
+ useEffect(() => {
+    if (organization) {
+      setThemeColors({
+        primaryColor: organization.primaryColor || "#1976d2",
+        secondaryColor: organization.secondaryColor || "#dc004e",
+      });
     }
-  }, []);
-
-  const fetchThemeColors = async () => {
-    try {
-      const response = await api.get("/organization");
-      if (response.data) {
-        const colors = {
-          primaryColor: response.data.primaryColor || "#1976d2",
-          secondaryColor: response.data.secondaryColor || "#dc004e",
-        };
-        setThemeColors(colors);
-        localStorage.setItem("themeColors", JSON.stringify(colors));
-      }
-    } catch (error) {
-      console.error("Error fetching theme colors:", error);
-      const savedColors = localStorage.getItem("themeColors");
-      if (savedColors) {
-        setThemeColors(JSON.parse(savedColors));
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [organization])
 
   const updateThemeColors = async (newColors) => {
     try {
@@ -119,10 +98,10 @@ export const ThemeProvider = ({ children }) => {
   const value = {
     themeColors,
     updateThemeColors,
-    loading,
+    loading: authLoading,
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <Box
         sx={{
