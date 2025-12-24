@@ -34,6 +34,13 @@ const Layout = ({ children }) => {
   const {logoUrl,setLogoUrl} = useLogo()
 
   useEffect(() => {
+  if (!loading && !user) {
+    navigate("/login");
+  }
+}, [user, loading, navigate]);
+  
+
+  useEffect(() => {
     if (organization?.logoUrl && !logoUrl) {
       setLogoUrl(organization.logoUrl);
     }
@@ -73,11 +80,6 @@ const Layout = ({ children }) => {
             <CircularProgress />
           </Box>
         );
-  }
-
-  if (!user && !loading) {
-    navigate("/login");
-    return null;
   }
 
   const handleProfileMenuOpen = (event) => setAnchorEl(event.currentTarget);
