@@ -80,14 +80,10 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (searchTerm.length > 0) {
-      const filtered = medicines.filter((medicine) =>
-        medicine.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredMedicines(filtered);
-    } else {
-      setFilteredMedicines([]);
-    }
+    const filtered = medicines.filter((medicine) =>
+      medicine.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredMedicines(filtered);
   }, [searchTerm, medicines]);
 
   const fetchMedicines = async () => {
@@ -428,7 +424,7 @@ const Dashboard = () => {
 
           <Grid item xs={6} sm={6} md={2}>
             <TextField
-              label="Discount Per Medicine (%)"
+              label="Discount(%)"
               type="number"
               value={perMedicineDiscount}
               inputRef={perMedRef}
@@ -718,7 +714,7 @@ const Dashboard = () => {
         scroll="paper"
       >
 
-        <DialogContent id="print-section" style={{width:"80mm"}}>
+        <DialogContent id="print-section" style={{width:"80mm", padding:"15px"}}>
           {finalizedInvoice && (
             <Box
               sx={{
@@ -737,33 +733,33 @@ const Dashboard = () => {
               <Box
                 display="flex"
                 justifyContent="space-between"
-                sx={{ fontSize: "12px", mb: 1 }}
+                sx={{ fontSize: "10px", mb: 1 }}
               >
-                <Typography variant="caption">
+                <Typography sx={{fontSize:'10px'}}>
                   Inv #: {String(finalizedInvoice.invoiceNumber).padStart(6, "0")}
                 </Typography>
-                <Typography variant="caption">
+                <Typography sx={{fontSize:'10px'}}>
                   {new Date(finalizedInvoice.createdAt).toLocaleString()}
                 </Typography>
               </Box>
 
               <Box display="flex" justifyContent="space-between" sx={{ mb: 1 }}>
-                <Typography variant="caption">
+                <Typography sx={{fontSize:'10px'}}>
                   Cashier: {finalizedInvoice.user?.firstName || "N/A"}
                 </Typography>
 
-                <Typography variant="caption">
+                <Typography sx={{fontSize:'10px'}}>
                     Customer: {finalizedInvoice.customer || "N/A"}
                 </Typography>
               </Box>
 
               <Box display="flex" justifyContent="space-between" sx={{ mb: 1 }}>
 
-                <Typography variant="caption">
+                <Typography sx={{fontSize:'10px'}}>
                     License No: {organization.licenseNo || "N/A"}
                 </Typography>
 
-                <Typography variant="caption">
+                <Typography sx={{fontSize:'10px'}}>
                     NTN No: {organization.ntnNo || "N/A"}
                 </Typography>
               </Box>
@@ -771,15 +767,15 @@ const Dashboard = () => {
               <Divider sx={{ border:"1px dashed black"}}/>
 
               {/* Items Table - Simplified for Receipt */}
-              <Table size="small" sx={{ "& td, & th": { padding: "4px 0", fontSize: "12px" } }}>
+              <Table size="small" sx={{ "& td, & th": { padding: "4px 0", fontSize: "10px" } }}>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Medicine</TableCell>
-                      <TableCell>Price</TableCell>
-                      <TableCell>Discount (%)</TableCell>
-                      <TableCell>Price after Discount</TableCell>
-                      <TableCell>Qty</TableCell>
-                      <TableCell>Total</TableCell>
+                      {/* <TableCell style={{fontWeight: "bold"}}>#</TableCell> */}
+                      <TableCell style={{fontWeight: "bold"}}>Description Price</TableCell>
+                      <TableCell style={{fontWeight: "bold"}}>Discount (%)</TableCell>
+                      <TableCell style={{fontWeight: "bold"}}>Disc. Price</TableCell>
+                      <TableCell style={{fontWeight: "bold"}}>Qty</TableCell>
+                      <TableCell style={{fontWeight: "bold"}}>Total</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -796,16 +792,22 @@ const Dashboard = () => {
                           Number(item.medDiscount || 0)) /
                           100;
                       return (
-                        <TableRow key={i}>
-                          <TableCell style={{}}>
+                        <>
+                        <TableRow key={i*2}>
+                          {/* <TableCell>{i+1}</TableCell> */}
+                          <TableCell  colspan={4} className="table-name-data">
                             {item.medicine?.name || "Unknown"}
                           </TableCell>
+                        </TableRow>
+                        <TableRow key={i*2+1}>
+                          {/* <TableCell></TableCell> */}
                           <TableCell>{item.salesPrice?.toFixed(2)}</TableCell>
                           <TableCell>{item.medDiscount?.toFixed(2)}</TableCell>
                           <TableCell>{priceAfterDiscount.toFixed(2)}</TableCell>
                           <TableCell>{item.qty}</TableCell>
                           <TableCell>{medicineNetTotal.toFixed(2)}</TableCell>
                         </TableRow>
+                        </>
                       );
                     })}
                   </TableBody>
@@ -815,14 +817,14 @@ const Dashboard = () => {
 
               {/* Totals Section */}
               <Box display="flex" justifyContent="space-between" mb={0.5}>
-                <Typography variant="body2">Gross Total:</Typography>
-                <Typography variant="body2">
+                <Typography sx={{fontSize:'10px'}}>Gross Total:</Typography>
+                <Typography sx={{fontSize:'10px'}}>
                   {finalizedInvoice.grossTotal?.toFixed(2)}
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="space-between" mb={0.5}>
-                <Typography variant="body2">Discount:</Typography>
-                <Typography variant="body2">
+                <Typography sx={{fontSize:'10px'}}>Discount:</Typography>
+                <Typography sx={{fontSize:'10px'}}>
                   -{finalizedInvoice.discount?.toFixed(2)}
                 </Typography>
               </Box>
@@ -832,36 +834,36 @@ const Dashboard = () => {
                 mb={1}
                 sx={{ fontWeight: "bold" }}
               >
-                <Typography variant="subtitle2">NET TOTAL:</Typography>
-                <Typography variant="subtitle2">
+                <Typography sx={{fontSize:'10px', fontWeight:"bold"}}>Net Total:</Typography>
+                <Typography sx={{fontSize:'10px', fontWeight:"bold"}}>
                   {finalizedInvoice.netTotal?.toFixed(2)}
                 </Typography>
               </Box>
 
               <Box display="flex" justifyContent="space-between" mb={0.5}>
-                <Typography variant="body2">Cash Paid:</Typography>
-                <Typography variant="body2">
+                <Typography sx={{fontSize:'10px'}}>Cash Paid:</Typography>
+                <Typography sx={{fontSize:'10px'}}>
                   {finalizedInvoice.cashPaid?.toFixed(2)}
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="space-between">
-                <Typography variant="body2">Change:</Typography>
-                <Typography variant="body2">
+                <Typography sx={{fontSize:'10px'}}>Change:</Typography>
+                <Typography sx={{fontSize:'10px'}}>
                   {finalizedInvoice.balance?.toFixed(2)}
                 </Typography>
               </Box>
 
              <Divider sx={{ border:"1px dashed black",my:2}}/>
-              <Typography variant="caption" display="block" align="start">
+              <Typography sx={{fontSize:'10px'}} display="block" align="start">
                 Thank you for your purchase!
               </Typography>
-              <Typography variant="caption" display="block" align="start">
+              <Typography sx={{fontSize:'10px'}} display="block" align="start">
                 Loose and Fridge Items are not refundable
               </Typography>
-              <Typography variant="caption" display="block" align="start">
+              <Typography sx={{fontSize:'10px'}} display="block" align="start">
                 Return Will Be Accepted Within 7 Days with Original Receipt
               </Typography>
-              <Typography variant="caption" display="block" align="start">
+              <Typography sx={{fontSize:'10px'}} display="block" align="start">
                 Software by Agile Pharmacy
               </Typography>
             </Box>
