@@ -330,7 +330,7 @@ const Dashboard = () => {
         </Typography>
 
         <Grid container spacing={2} alignItems="flex-end">
-          <Grid item xs={12} sm={12} md={10} sx={{ width: "100%" }}>
+          <Grid  sx={{ width: "100%" }}>
             <Autocomplete
               sx={{ width: "100%" }}
               freeSolo
