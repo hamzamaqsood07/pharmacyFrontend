@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   Paper,
@@ -11,7 +11,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
   Grid,
   Card,
   CardContent,
@@ -32,7 +31,6 @@ import {
   ShoppingCart,
   Inventory,
   TrendingUp,
-  AttachMoney,
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import api from "../utils/axiosConfig";
@@ -312,8 +310,11 @@ const Purchase = () => {
                 }
               }}
               onChange={(e) => setPackQuantity(parseInt(e.target.value))}
-              onfocu
-              inputProps={{ min: 1 }}
+              slotProps={{
+                input: {
+                  inputProps: { min: 1 },
+                },
+              }}
               fullWidth
               size="large"
             />

@@ -7,10 +7,10 @@ import Medicines from "./pages/Medicines";
 import Purchase from "./pages/Purchase";
 import Invoices from "./pages/Invoices";
 import Organization from "./pages/Organization";
-import ProtectedRoute from "./components/ProtectedRoute";
 import { ThemeProvider } from "./components/ThemeProvider";
 import ThemedToastContainer from "./components/ThemedToastContainer";
 import { LogoProvider } from "./components/LogoProvider";
+import { AuthProvider } from "./components/AuthProvider";
 
 function App() {
   const router = createBrowserRouter([
@@ -20,63 +20,55 @@ function App() {
     },
     {
       path: "/",
-      element: (
-        <ProtectedRoute>
+      element: (     
           <Layout>
             <Dashboard />
-          </Layout>
-        </ProtectedRoute>
+          </Layout>       
       ),
     },
     {
       path: "/medicines",
-      element: (
-        <ProtectedRoute>
+      element: (      
           <Layout>
             <Medicines />
-          </Layout>
-        </ProtectedRoute>
+          </Layout>  
       ),
     },
     {
       path: "/purchase",
-      element: (
-        <ProtectedRoute>
+      element: (      
           <Layout>
             <Purchase />
-          </Layout>
-        </ProtectedRoute>
+          </Layout>     
       ),
     },
     {
       path: "/invoices",
-      element: (
-        <ProtectedRoute>
+      element: (    
           <Layout>
             <Invoices />
-          </Layout>
-        </ProtectedRoute>
+          </Layout> 
       ),
     },
     {
       path: "/organization",
-      element: (
-        <ProtectedRoute>
+      element: (   
           <Layout>
             <Organization />
           </Layout>
-        </ProtectedRoute>
       ),
     },
   ]);
 
   return (
-    <LogoProvider>
-      <ThemeProvider>
-        <RouterProvider router={router} />
-        <ThemedToastContainer />
-      </ThemeProvider>
-    </LogoProvider>
+    <AuthProvider>
+      <LogoProvider>
+        <ThemeProvider>
+          <RouterProvider router={router}/>
+          <ThemedToastContainer/>
+        </ThemeProvider>
+      </LogoProvider>
+    </AuthProvider>
   );
 }
 

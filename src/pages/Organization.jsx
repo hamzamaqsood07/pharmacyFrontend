@@ -32,9 +32,10 @@ import { toast } from 'react-toastify';
 import api from '../utils/axiosConfig';
 import ThemeColorPicker from '../components/ThemeColorPicker';
 import { useLogo } from "../contexts/LogoContext";
+import { useAuth } from '../contexts/AuthContext';
 
 const Organization = () => {
-  const [organization, setOrganization] = useState(null);
+  const {organization,setOrganization} = useAuth();
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [logoDialogOpen, setLogoDialogOpen] = useState(false);
@@ -49,28 +50,27 @@ const Organization = () => {
     description: '',
     address: '',
     phone: '',
-    email: ''
+    email: '',
+    licenseNo:'',
+    ntnNo:''
   });
 
-  useEffect(() => {
-    fetchOrganization();
-  }, []);
-
-  const fetchOrganization = async () => {
-    try {
-      const response = await api.get('/organization');
-      setOrganization(response.data);
+ useEffect(() => {
+    if (organization) {
       setFormData({
-        orgTitle: response.data.orgTitle || '',
-        description: response.data.description || '',
-        address: response.data.address || '',
-        phone: response.data.phone || '',
-        email: response.data.email || ''
+        orgTitle: organization.orgTitle || '',
+        description: organization.description || '',
+        address: organization.address || '',
+        phone: organization.phone || '',
+        email: organization.email || '',
+        licenseNo:organization.licenseNo ||  '',
+        ntnNo: organization.ntnNo || ''
       });
-    } catch (error) {
-      toast.error('Failed to fetch organization details');
     }
-  };
+    else{
+    toast.error('Failed to fetch organization details');
+    }
+  }, [organization]);
 
   const handleEdit = () => {
     setEditMode(true);
@@ -83,7 +83,9 @@ const Organization = () => {
       description: organization.description || '',
       address: organization.address || '',
       phone: organization.phone || '',
-      email: organization.email || ''
+      email: organization.email || '',
+      licenseNo:organization.licenseNo ||  '',
+      ntnNo: organization.ntnNo || ''
     });
   };
 
@@ -95,10 +97,10 @@ const Organization = () => {
 
     try {
       setLoading(true);
-      await api.patch('/organization', formData);
+      const response = await api.patch('/organization', formData);
       toast.success('Organization updated successfully');
       setEditMode(false);
-      fetchOrganization();
+      setOrganization(response.data);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update organization');
     } finally {
@@ -133,18 +135,22 @@ const Organization = () => {
       const formData = new FormData();
       formData.append('logo', selectedFile);
 
-      await api.post('/organization/logo', formData, {
+      const response = await api.post('/organization/logo', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
       toast.success('Logo uploaded successfully');
+      const newLogoUrl = response.data.logoUrl;
       setLogoUrl(previewUrl);
       setLogoDialogOpen(false);
       setSelectedFile(null);
       setPreviewUrl(null);
-      fetchOrganization();
+      setOrganization(prev => ({
+          ...prev,
+          logoUrl: newLogoUrl
+      }));
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to upload logo');
     } finally {
@@ -157,7 +163,10 @@ const Organization = () => {
       await api.delete('/organization/logo');
       setLogoUrl(null);
       toast.success('Logo removed successfully');
-      fetchOrganization();
+      setOrganization(prev => ({
+          ...prev,
+          logoUrl: null
+      }));
     } catch (error) {
       toast.error('Failed to remove logo');
     }
@@ -236,14 +245,12 @@ const Organization = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label="Description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  label="Email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   fullWidth
-                  multiline
-                  rows={3}
                   disabled={!editMode}
-                  placeholder="Brief description of your organization"
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -264,14 +271,34 @@ const Organization = () => {
                   disabled={!editMode}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <TextField
-                  label="Email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  label="License No"
+                  value={formData.licenseNo}
+                  onChange={(e) => setFormData({ ...formData, licenseNo: e.target.value })}
                   fullWidth
                   disabled={!editMode}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="NTN No"
+                  value={formData.ntnNo}
+                  onChange={(e) => setFormData({ ...formData, ntnNo: e.target.value })}
+                  fullWidth
+                  disabled={!editMode}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  fullWidth
+                  multiline
+                  rows={3}
+                  disabled={!editMode}
+                  placeholder="Brief description of your organization"
                 />
               </Grid>
             </Grid>

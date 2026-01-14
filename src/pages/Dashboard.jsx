@@ -26,16 +26,17 @@ import {
 } from "@mui/material";
 import {
   Add,
-  Remove,
   Delete,
   Search,
   Receipt,
   Print,
   Percent,
 } from "@mui/icons-material";
+import "./Dashboard.css"
 import { toast } from "react-toastify";
 import api from "../utils/axiosConfig";
 import { ThemeContext } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
 
 const Dashboard = () => {
   const [medicines, setMedicines] = useState([]);
@@ -52,6 +53,7 @@ const Dashboard = () => {
   const [customerName, setCustomerName] = useState("");
   const [finalizedInvoice, setFinalizedInvoice] = useState(null);
   const [perMedicineDiscount, setPerMedicineDiscount] = useState(0);
+  const {organization} = useAuth();
 
   const { themeColors } = useContext(ThemeContext);
 
@@ -78,14 +80,10 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (searchTerm.length > 0) {
-      const filtered = medicines.filter((medicine) =>
-        medicine.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredMedicines(filtered);
-    } else {
-      setFilteredMedicines([]);
-    }
+    const filtered = medicines.filter((medicine) =>
+      medicine.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredMedicines(filtered);
   }, [searchTerm, medicines]);
 
   const fetchMedicines = async () => {
@@ -121,7 +119,7 @@ const Dashboard = () => {
   };
 
   const handleAddToInvoice = async () => {
-    if (!selectedMedicine || quantity <= 0) return;
+    if (!selectedMedicine.qty ) return toast.error(selectedMedicine.name+" is out of stock")
 
     try {
       setLoading(true);
@@ -199,6 +197,7 @@ const Dashboard = () => {
       });
       const { message } = response.data;
       toast.success(message);
+      fetchMedicines()
       setFinalizeDialogOpen(false);
       setCurrentInvoice(null);
       setDiscountPercentage(0);
@@ -266,8 +265,9 @@ const Dashboard = () => {
         discountedPercentage: discountPercentage,
         customerName: customerName || "",
       });
-
+      
       const { updatedInvoice } = response.data;
+      fetchMedicines()
       setFinalizedInvoice(updatedInvoice);
       setCurrentInvoice(null);
       setFinalizeDialogOpen(false);
@@ -330,7 +330,7 @@ const Dashboard = () => {
         </Typography>
 
         <Grid container spacing={2} alignItems="flex-end">
-          <Grid item xs={12} sm={12} md={10} sx={{ width: "100%" }}>
+          <Grid  sx={{ width: "100%" }}>
             <Autocomplete
               sx={{ width: "100%" }}
               freeSolo
@@ -338,7 +338,7 @@ const Dashboard = () => {
               getOptionLabel={(option) => option.name || ""}
               value={selectedMedicine || ""}
               onChange={(event, newValue) => {
-                if (newValue && typeof newValue === "object") {
+                if(newValue){
                   handleMedicineSelect(newValue);
                 }
               }}
@@ -424,7 +424,7 @@ const Dashboard = () => {
 
           <Grid item xs={6} sm={6} md={2}>
             <TextField
-              label="Discount Per Medicine (%)"
+              label="Discount(%)"
               type="number"
               value={perMedicineDiscount}
               inputRef={perMedRef}
@@ -674,7 +674,7 @@ const Dashboard = () => {
             />
 
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Net Total: Rs. {netTotal.toFixed(2)}
+              Net Total:  {netTotal.toFixed(2)}
             </Typography>
             {cashPaid > 0 && (
               <Typography
@@ -711,83 +711,71 @@ const Dashboard = () => {
       <Dialog
         open={printDialogOpen}
         onClose={() => setPrintDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
+        scroll="paper"
       >
-        <DialogTitle>
-          Invoice Details
+
+        <DialogContent id="print-section" style={{width:"80mm", padding:"15px"}}>
           {finalizedInvoice && (
-            <Typography variant="body2" color="text.secondary">
-              ID: #INV-{String(finalizedInvoice.invoiceNumber).padStart(6, "0")}
-            </Typography>
-          )}
-        </DialogTitle>
-
-        <DialogContent id="print-section">
-          {finalizedInvoice && (
-            <Box>
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="h6" gutterBottom>
-                    Invoice Info
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Date:</strong>{" "}
-                    {new Date(finalizedInvoice.createdAt).toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Cashier:</strong>{" "}
-                    {finalizedInvoice.user?.firstName || "N/A"}
-                  </Typography>
-                  {finalizedInvoice.customer && (
-                    <Typography variant="body2">
-                      <strong>Customer:</strong>{" "}
-                      {finalizedInvoice.customer || "N/A"}
-                    </Typography>
-                  )}
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="h6" gutterBottom>
-                    Financial Summary
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Gross Total:</strong> Rs.{" "}
-                    {finalizedInvoice.grossTotal?.toFixed(2)}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Discount:</strong> Rs.{" "}
-                    {finalizedInvoice.discount?.toFixed(2)}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Net Total:</strong> Rs.{" "}
-                    {finalizedInvoice.netTotal?.toFixed(2)}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Cash Paid:</strong> Rs.{" "}
-                    {finalizedInvoice.cashPaid?.toFixed(2)}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Balance:</strong> Rs.{" "}
-                    {finalizedInvoice.balance?.toFixed(2)}
-                  </Typography>
-                </Grid>
-              </Grid>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Typography variant="h6" gutterBottom>
-                Invoice Items
+            <Box
+              sx={{
+                textAlign: "center",
+                p: 1,
+              }}
+            >
+              <Typography variant="h5" fontWeight="bold" gutterBottom>
+                {organization?.orgTitle || "Pharmacy Name"}
               </Typography>
-              <TableContainer>
-                <Table size="small">
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                {organization?.address || "Pharmacy Address"}
+                <br />
+                {organization?.phone || "Contact Info"}
+              </Typography>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                sx={{ fontSize: "10px", mb: 1 }}
+              >
+                <Typography sx={{fontSize:'10px'}}>
+                  Inv #: {String(finalizedInvoice.invoiceNumber).padStart(6, "0")}
+                </Typography>
+                <Typography sx={{fontSize:'10px'}}>
+                  {new Date(finalizedInvoice.createdAt).toLocaleString()}
+                </Typography>
+              </Box>
+
+              <Box display="flex" justifyContent="space-between" sx={{ mb: 1 }}>
+                <Typography sx={{fontSize:'10px'}}>
+                  Cashier: {finalizedInvoice.user?.firstName || "N/A"}
+                </Typography>
+
+                <Typography sx={{fontSize:'10px'}}>
+                    Customer: {finalizedInvoice.customer || "N/A"}
+                </Typography>
+              </Box>
+
+              <Box display="flex" justifyContent="space-between" sx={{ mb: 1 }}>
+
+                <Typography sx={{fontSize:'10px'}}>
+                    License No: {organization.licenseNo || "N/A"}
+                </Typography>
+
+                <Typography sx={{fontSize:'10px'}}>
+                    NTN No: {organization.ntnNo || "N/A"}
+                </Typography>
+              </Box>
+
+              <Divider sx={{ border:"1px dashed black"}}/>
+
+              {/* Items Table - Simplified for Receipt */}
+              <Table size="small" sx={{ "& td, & th": { padding: "4px 0", fontSize: "10px" } }}>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Medicine</TableCell>
-                      <TableCell>Price</TableCell>
-                      <TableCell>Discount (%)</TableCell>
-                      <TableCell>Price after Discount</TableCell>
-                      <TableCell>Qty</TableCell>
-                      <TableCell>Total</TableCell>
+                      {/* <TableCell style={{fontWeight: "bold"}}>#</TableCell> */}
+                      <TableCell style={{fontWeight: "bold"}}>Description Price</TableCell>
+                      <TableCell style={{fontWeight: "bold"}}>Discount (%)</TableCell>
+                      <TableCell style={{fontWeight: "bold"}}>Disc. Price</TableCell>
+                      <TableCell style={{fontWeight: "bold"}}>Qty</TableCell>
+                      <TableCell style={{fontWeight: "bold"}}>Total</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -804,26 +792,85 @@ const Dashboard = () => {
                           Number(item.medDiscount || 0)) /
                           100;
                       return (
-                        <TableRow key={i}>
-                          <TableCell>
+                        <>
+                        <TableRow key={i*2}>
+                          {/* <TableCell>{i+1}</TableCell> */}
+                          <TableCell  colspan={4} className="table-name-data">
                             {item.medicine?.name || "Unknown"}
                           </TableCell>
+                        </TableRow>
+                        <TableRow key={i*2+1}>
+                          {/* <TableCell></TableCell> */}
                           <TableCell>{item.salesPrice?.toFixed(2)}</TableCell>
                           <TableCell>{item.medDiscount?.toFixed(2)}</TableCell>
                           <TableCell>{priceAfterDiscount.toFixed(2)}</TableCell>
                           <TableCell>{item.qty}</TableCell>
                           <TableCell>{medicineNetTotal.toFixed(2)}</TableCell>
                         </TableRow>
+                        </>
                       );
                     })}
                   </TableBody>
-                </Table>
-              </TableContainer>
+              </Table>
+
+              <Divider sx={{ border:"1px dashed black",my:2}}/>
+
+              {/* Totals Section */}
+              <Box display="flex" justifyContent="space-between" mb={0.5}>
+                <Typography sx={{fontSize:'10px'}}>Gross Total:</Typography>
+                <Typography sx={{fontSize:'10px'}}>
+                  {finalizedInvoice.grossTotal?.toFixed(2)}
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="space-between" mb={0.5}>
+                <Typography sx={{fontSize:'10px'}}>Discount:</Typography>
+                <Typography sx={{fontSize:'10px'}}>
+                  -{finalizedInvoice.discount?.toFixed(2)}
+                </Typography>
+              </Box>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                mb={1}
+                sx={{ fontWeight: "bold" }}
+              >
+                <Typography sx={{fontSize:'10px', fontWeight:"bold"}}>Net Total:</Typography>
+                <Typography sx={{fontSize:'10px', fontWeight:"bold"}}>
+                  {finalizedInvoice.netTotal?.toFixed(2)}
+                </Typography>
+              </Box>
+
+              <Box display="flex" justifyContent="space-between" mb={0.5}>
+                <Typography sx={{fontSize:'10px'}}>Cash Paid:</Typography>
+                <Typography sx={{fontSize:'10px'}}>
+                  {finalizedInvoice.cashPaid?.toFixed(2)}
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="space-between">
+                <Typography sx={{fontSize:'10px'}}>Change:</Typography>
+                <Typography sx={{fontSize:'10px'}}>
+                  {finalizedInvoice.balance?.toFixed(2)}
+                </Typography>
+              </Box>
+
+             <Divider sx={{ border:"1px dashed black",my:2}}/>
+              <Typography sx={{fontSize:'10px'}} display="block" align="start">
+                Thank you for your purchase!
+              </Typography>
+              <Typography sx={{fontSize:'10px'}} display="block" align="start">
+                Loose and Fridge Items are not refundable
+              </Typography>
+              <Typography sx={{fontSize:'10px'}} display="block" align="start">
+                Return Will Be Accepted Within 7 Days with Original Receipt
+              </Typography>
+              <Typography sx={{fontSize:'10px'}} display="block" align="start">
+                Software by Agile Pharmacy
+              </Typography>
             </Box>
           )}
         </DialogContent>
 
-        <DialogActions sx={{ displayPrint: "none" }}>
+        <DialogActions className="no-print">
           <Button onClick={() => setPrintDialogOpen(false)}>Close</Button>
           <Button
             variant="contained"
