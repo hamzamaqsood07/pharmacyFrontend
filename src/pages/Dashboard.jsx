@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import{ useState, useEffect, useRef, useContext } from "react";
 import {
   Box,
   Paper,
@@ -92,6 +92,7 @@ const Dashboard = () => {
       setMedicines(response.data);
     } catch (error) {
       toast.error("Failed to fetch medicines");
+      console.error("Error fetching medicines:", error);
     }
   };
 
@@ -336,10 +337,12 @@ const Dashboard = () => {
               freeSolo
               options={filteredMedicines}
               getOptionLabel={(option) => option.name || ""}
-              value={selectedMedicine || ""}
+              value={selectedMedicine }
               onChange={(event, newValue) => {
                 if(newValue){
                   handleMedicineSelect(newValue);
+                }else {
+                  setSelectedMedicine(null);
                 }
               }}
               onInputChange={(event, newInputValue) => {

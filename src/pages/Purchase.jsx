@@ -155,7 +155,7 @@ const Purchase = () => {
   };
 
   const totalMedicines = medicines.length;
-  const lowStockMedicines = medicines.filter((m) => m.qty < 10).length;
+  const lowStockMedicines = medicines.filter((m) => m.qty < 10 && m.qty > 0).length;
   const outOfStockMedicines = medicines.filter((m) => m.qty === 0).length;
 
   return (
