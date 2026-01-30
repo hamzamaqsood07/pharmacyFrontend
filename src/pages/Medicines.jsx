@@ -50,7 +50,6 @@ const Medicines = () => {
     salesPrice: "",
     purchasePrice: "",
     packSize: "",
-    qty: "",
   });
 
   const searchRef = useRef(null);
@@ -98,7 +97,6 @@ const Medicines = () => {
         salesPrice: medicine.salesPrice.toString(),
         purchasePrice: medicine.purchasePrice.toString(),
         packSize: medicine.packSize.toString(),
-        qty: medicine.qty.toString(),
       });
     } else {
       setEditingMedicine(null);
@@ -107,7 +105,6 @@ const Medicines = () => {
         salesPrice: "",
         purchasePrice: "",
         packSize: "",
-        qty: "",
       });
     }
     setDialogOpen(true);
@@ -121,7 +118,6 @@ const Medicines = () => {
       salesPrice: "",
       purchasePrice: "",
       packSize: "",
-      qty: "",
     });
   };
 
@@ -182,7 +178,7 @@ const Medicines = () => {
   };
 
   const totalMedicines = medicines.length;
-  const lowStockMedicines = medicines.filter((m) => m.qty < 10).length;
+  const lowStockMedicines = medicines.filter((m) => m.qty < 10 && m.qty > 0).length;
   const outOfStockMedicines = medicines.filter((m) => m.qty === 0).length;
 
   return (

@@ -9,13 +9,11 @@ import InputAdornment from "@mui/material/InputAdornment";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import { FormControl } from "@mui/material";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -45,7 +43,7 @@ export default function Login() {
       
       if (token) {
         localStorage.setItem('token', token);
-        navigate("/");
+        window.location.href = "/";
       } else {
         setError("Login failed - no token received");
       }
