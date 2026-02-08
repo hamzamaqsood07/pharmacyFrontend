@@ -1,4 +1,4 @@
-import{ useState, useEffect, useRef, useContext } from "react";
+import React,{ useState, useEffect, useRef, useContext } from "react";
 import {
   Box,
   Paper,
@@ -134,6 +134,7 @@ const Dashboard = () => {
       setSelectedMedicine(null);
       setQuantity(1);
       setPerMedicineDiscount(0);
+      setSelectedMedicine("")
       setSearchTerm("");
       setFilteredMedicines([]);
       setTimeout(() => {
@@ -287,6 +288,132 @@ const Dashboard = () => {
     }
   };
 
+  const handleExportToCSV = async () => {
+    // 1. VALIDATION CHECK
+    if (cashPaid < netTotal) {
+      toast.error("Cash paid must be at least equal to net total");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // 2. CALL API TO FINALIZE (Save to DB)
+      const response = await api.post("/invoice/finalize", {
+        cashPaid,
+        discountedPercentage: discountPercentage,
+        customerName: customerName || "",
+      });
+
+      const { updatedInvoice } = response.data;
+
+      // 3. UPDATE UI STATE
+      toast.success("Invoice saved and exported successfully");
+      fetchMedicines(); 
+      setCurrentInvoice(null);
+      setFinalizeDialogOpen(false);
+      setDiscountPercentage(0);
+      setCashPaid(0);
+      setCustomerName("");
+
+      // =========================================================
+      // 4. BUILD CSV CONTENT (TOP TO BOTTOM)
+      // =========================================================
+      
+      let csvContent = "data:text/csv;charset=utf-8,";
+
+      // --- SECTION A: ORGANIZATION HEADER ---
+      // We use quotes "..." around fields to handle commas safely
+      csvContent += `"${organization?.orgTitle || "Pharmacy Name"}"\n`;
+      csvContent += `"${organization?.address || "Address"}"\n`;
+      csvContent += `"${organization?.phone || "Phone"}"\n`;
+      csvContent += `"License No: ${organization?.licenseNo || "N/A"}","NTN: ${organization?.ntnNo || "N/A"}"\n`;
+      csvContent += "\n"; // Empty line for spacing
+
+      // --- SECTION B: INVOICE META DATA ---
+      csvContent += `"Invoice #:","${String(updatedInvoice.invoiceNumber).padStart(6, '0')}"\n`;
+      csvContent += `"Date:","${new Date(updatedInvoice.createdAt).toLocaleString()}"\n`;
+      csvContent += `"Cashier:","${updatedInvoice.user?.firstName || "N/A"}"\n`;
+      csvContent += `"Customer:","${updatedInvoice.customer || "N/A"}"\n`;
+      csvContent += "\n";
+
+      // --- SECTION C: ITEMS TABLE HEADERS ---
+      const headers = [
+        "Description", 
+        "Price", 
+        "Discount (%)", 
+        "Disc. Price", 
+        "Qty", 
+        "Total"
+      ];
+      csvContent += headers.join(",") + "\n";
+
+      // --- SECTION D: ITEMS DATA ---
+      updatedInvoice.invoiceMedicines.forEach((item) => {
+        const unitPrice = Number(item.salesPrice) || 0;
+        const discountPercent = Number(item.medDiscount) || 0;
+        const priceAfterDiscount = unitPrice - (unitPrice * discountPercent / 100);
+        const lineTotal = priceAfterDiscount * item.qty;
+
+        // Escape quotes in medicine names (e.g. 5" Bandage becomes 5"" Bandage)
+        const safeName = item.medicine?.name ? `"${item.medicine.name.replace(/"/g, '""')}"` : '"Unknown"';
+
+        const row = [
+          safeName,
+          unitPrice.toFixed(2),
+          discountPercent.toFixed(2),
+          priceAfterDiscount.toFixed(2),
+          item.qty,
+          lineTotal.toFixed(2)
+        ];
+
+        csvContent += row.join(",") + "\n";
+      });
+
+      // --- SECTION E: TOTALS (Aligned to Right) ---
+      csvContent += "\n"; 
+      csvContent += `,,,,"Gross Total",${updatedInvoice.grossTotal?.toFixed(2)}\n`;
+      csvContent += `,,,,"Discount",-${updatedInvoice.discount?.toFixed(2)}\n`;
+      csvContent += `,,,,"NET TOTAL",${updatedInvoice.netTotal?.toFixed(2)}\n`;
+      csvContent += `,,,,"Cash Paid",${updatedInvoice.cashPaid?.toFixed(2)}\n`;
+      csvContent += `,,,,"Change",${updatedInvoice.balance?.toFixed(2)}\n`;
+
+      // --- SECTION F: FOOTER MESSAGES ---
+      csvContent += "\n";
+      csvContent += `"Thank you for your purchase!"\n`;
+      csvContent += `"Loose and Fridge Items are not refundable"\n`;
+      csvContent += `"Return Will Be Accepted Within 7 Days with Original Receipt"\n`;
+      csvContent += `"Software by Agile Pharmacy"\n`;
+
+      // =========================================================
+      // 5. DOWNLOAD FILE
+      // =========================================================
+      
+      // Note: We remove the 'data:text/csv...' prefix when using Blob
+      const cleanCsvContent = csvContent.replace("data:text/csv;charset=utf-8,", "");
+      const blob = new Blob([cleanCsvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      
+      const safeInvoiceNum = String(updatedInvoice.invoiceNumber || "000");
+      link.setAttribute("download", `Invoice_${safeInvoiceNum}.csv`);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to save and export invoice"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box>
       <Box
@@ -387,8 +514,9 @@ const Dashboard = () => {
                   }}
                 />
               )}
-              renderOption={(props, option) => (
-                <Box component="li" {...props}>
+              renderOption={(props, option) => {
+                return(
+                <Box component="li" {...props} key={option.id}>
                   <Box>
                     <Typography variant="body1" fontWeight="medium">
                       {option.name}
@@ -399,7 +527,7 @@ const Dashboard = () => {
                     </Typography>
                   </Box>
                 </Box>
-              )}
+              )}}
             />
           </Grid>
 
@@ -708,6 +836,15 @@ const Dashboard = () => {
           >
             Finalize Invoice
           </Button>
+
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={loading || cashPaid < netTotal || !cashPaid}
+            onClick={handleExportToCSV}
+          >
+            Export Excel
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -782,7 +919,7 @@ const Dashboard = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {finalizedInvoice.invoiceMedicines?.map((item, i) => {
+                    {finalizedInvoice.invoiceMedicines?.map((item) => {
                       const medTotal =
                         Number(item.salesPrice) * Number(item.qty);
                       const discountAmt =
@@ -795,14 +932,14 @@ const Dashboard = () => {
                           Number(item.medDiscount || 0)) /
                           100;
                       return (
-                        <>
-                        <TableRow key={i*2}>
+                        <React.Fragment key={item.medicineId}>
+                        <TableRow>
                           {/* <TableCell>{i+1}</TableCell> */}
-                          <TableCell  colspan={4} className="table-name-data">
+                          <TableCell  colSpan={4} className="table-name-data">
                             {item.medicine?.name || "Unknown"}
                           </TableCell>
                         </TableRow>
-                        <TableRow key={i*2+1}>
+                        <TableRow>
                           {/* <TableCell></TableCell> */}
                           <TableCell>{item.salesPrice?.toFixed(2)}</TableCell>
                           <TableCell>{item.medDiscount?.toFixed(2)}</TableCell>
@@ -810,7 +947,7 @@ const Dashboard = () => {
                           <TableCell>{item.qty}</TableCell>
                           <TableCell>{medicineNetTotal.toFixed(2)}</TableCell>
                         </TableRow>
-                        </>
+                        </React.Fragment>
                       );
                     })}
                   </TableBody>

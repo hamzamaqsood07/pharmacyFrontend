@@ -278,7 +278,7 @@ const Purchase = () => {
                 />
               )}
               renderOption={(props, option) => (
-                <Box component="li" {...props}>
+                <Box component="li" {...props} key={option.id}>
                   <Box>
                     <Typography variant="body1" fontWeight="medium">
                       {option.name}
